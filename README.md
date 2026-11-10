@@ -29,6 +29,7 @@ mit Vaadin gebaut: Seiten aktualisieren sich per Push, ohne neu zu laden.
 Voraussetzung ist Docker mit Compose (Synology: Container Manager, QNAP: Container Station).
 Die Vaadin-Version läuft auch neben der Java-Version oder einer bestehenden Django-Installation: Sie hat
 einen eigenen Projektnamen, eigene Daten und standardmäßig den Port 8002.
+Beide Oberflächen auf denselben Dokumenten beschreibt „Java- und Vaadin-Oberfläche gleichzeitig“.
 
 1. Projektordner auf das NAS kopieren, z. B. nach `/volume1/docker/documan-vaadin`.
 
@@ -99,6 +100,23 @@ Diese Fassung bindet `/volume1` ein, damit Sie den Zielordner der Datensicherung
 wählen können. DocuMan erreicht dort alles, worauf der Benutzer aus `PUID` Zugriff hat. Wer das
 einschränken möchte, setzt in `.env` zum Beispiel `BACKUP_BROWSE_DIR=/volume1/backup`. Für eine
 USB-Festplatte eignet sich `/volumeUSB1/usbshare`, sie muss beim Start angeschlossen sein.
+
+### Java- und Vaadin-Oberfläche gleichzeitig
+
+Die Java- und die Vaadin-Fassung lassen sich gleichzeitig auf denselben Dokumenten nutzen, die
+Java-Oberfläche auf Port 8001 und die Vaadin-Oberfläche auf Port 8002. Dafür gibt es
+`nas-paket/compose-java-und-vaadin.yaml`: Sie startet Datenbank und Hintergrunddienst einmal und dazu
+beide Oberflächen. Legen Sie sie im Projektordner der Java-Version als `compose.yaml` ab und erstellen Sie
+das Projekt neu. Vorhandene Daten bleiben erhalten. Ein eigenes Vaadin-Projekt ist dann nicht nötig und
+darf Port 8002 nicht zugleich belegen.
+
+- Änderungen in der einen Oberfläche erscheinen in der anderen, in der Vaadin-Oberfläche ohne Neuladen.
+- Benutzer, Passwörter und Einstellungen gelten für beide. Angemeldet wird in jeder Oberfläche getrennt,
+  beide bleiben im selben Browser nebeneinander angemeldet.
+- Beide Images müssen dieselbe Version haben. Mit `latest` und `pull_policy: always` holt das Neuerstellen
+  des Projekts beide zusammen.
+- Die Vaadin-Oberfläche braucht zusätzlich rund 400 bis 500 MB Arbeitsspeicher. Port und Speicher ändern
+  `VAADIN_PORT` und `VAADIN_HEAP_MB` in der `.env`.
 
 ## Dokumente hineinbekommen
 

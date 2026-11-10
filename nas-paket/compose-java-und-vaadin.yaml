@@ -1,0 +1,96 @@
+# Beide Oberflächen gleichzeitig: Java auf Port 8001, Vaadin auf Port 8002, mit denselben Dokumenten.
+#
+# Datenbank, Dokumentordner, .env und der Hintergrunddienst (worker) gibt es nur einmal. Beide Oberflächen
+# arbeiten auf denselben Daten, Änderungen in der einen erscheinen in der anderen. Beide Images müssen
+# dieselbe Version haben, mit latest und pull_policy always ist das beim Neuerstellen so. Passen die
+# Versionen nicht zusammen, startet die ältere Oberfläche nicht.
+#
+# Statt compose.yaml im Projektordner verwenden. Der Projektname bleibt documan-java, vorhandene Daten
+# bleiben erhalten. Wer nur eine Oberfläche will, nimmt compose.yaml.
+name: documan-java
+
+x-app: &app
+  image: mikeheinoldock/documan-java:latest
+  pull_policy: always
+  restart: unless-stopped
+  user: "${PUID:-1000}:${PGID:-1000}"
+  env_file: .env
+  environment: &app-environment
+    POSTGRES_HOST: db
+    MEDIA_ROOT: /data/media
+    CONSUME_DIR: /data/consume
+    BACKUP_DIR: /data/backup
+    CONSUME_HOST_DIR: ${CONSUME_DIR:-./consume}
+    BROWSE_HOST_DIR: ${BACKUP_BROWSE_DIR:-/volume1}
+    TZ: ${TIME_ZONE:-Europe/Berlin}
+  volumes:
+    - ${DATA_DIR:-./data}/media:/data/media
+    - ${CONSUME_DIR:-./consume}:/data/consume
+    - ${BACKUP_DIR:-./backup}:/data/backup
+    # Macht die Ordner des NAS in der Auswahl des Zielordners sichtbar.
+    - ${BACKUP_BROWSE_DIR:-/volume1}:/data/backup/nas
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+x-healthcheck: &healthcheck
+  test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+  interval: 15s
+  timeout: 5s
+  retries: 10
+  start_period: 60s
+
+# Ohne depends_on: Synology startet beim Hochfahren die Container einzeln und lehnt jeden ab, dessen
+# Abhängigkeit noch nicht läuft. DocuMan wartet stattdessen selbst auf die Datenbank.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: documan
+      POSTGRES_USER: documan
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt in .env}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale-provider=icu --icu-locale=de-DE
+    volumes:
+      - ${DB_DIR:-documan_java_db}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U documan -d documan"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Oberfläche der Java-Version
+  web:
+    <<: *app
+    environment:
+      <<: *app-environment
+      JAVA_HEAP: -Xmx${WEB_HEAP_MB:-256}m
+    ports:
+      - "${PORT:-8001}:8000"
+    healthcheck: *healthcheck
+
+  # Oberfläche der Vaadin-Version. Port und Arbeitsspeicher lassen sich in der .env mit VAADIN_PORT und
+  # VAADIN_HEAP_MB ändern.
+  vaadin:
+    <<: *app
+    image: mikeheinoldock/documan-vaadin:latest
+    environment:
+      <<: *app-environment
+      JAVA_HEAP: -Xmx${VAADIN_HEAP_MB:-384}m
+    ports:
+      - "${VAADIN_PORT:-8002}:8000"
+    healthcheck: *healthcheck
+
+  # Genau eine Instanz: verarbeitet die Warteschlange, beobachtet den
+  # Eingangsordner, ruft die Postfächer ab und führt Sicherungen aus.
+  worker:
+    <<: *app
+    environment:
+      <<: *app-environment
+      SPRING_PROFILES_ACTIVE: worker
+      JAVA_HEAP: -Xmx${WORKER_HEAP_MB:-512}m
+    stop_grace_period: 30s
+
+volumes:
+  documan_java_db:
