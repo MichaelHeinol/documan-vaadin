@@ -1,0 +1,44 @@
+# Tests gegen echtes PostgreSQL und echtes OCRmyPDF:
+#   docker compose -f docker-compose.test.yml run --rm --build tests
+name: documan-vaadin-test
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: documan
+      POSTGRES_USER: documan
+      POSTGRES_PASSWORD: test
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale-provider=icu --icu-locale=de-DE
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U documan -d documan"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    build:
+      context: .
+      target: test
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: test
+      SECRET_KEY: nur-fuer-tests
+      TZ: Europe/Berlin
+      JAVA_TOOL_OPTIONS: -Djava.awt.headless=true
+    working_dir: /workspace
+    command: ["mvn", "-B", "test"]
+    volumes:
+      - ./pom.xml:/workspace/pom.xml:ro
+      - ./src:/workspace/src:ro
+      - maven_repository:/root/.m2
+      - build_output:/workspace/target
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  maven_repository:
+  build_output:

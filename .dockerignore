@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+data
+backup
+consume
+umzug-probe
+target
+.claude
+.idea
+nas-paket
+tools
+*.pdf
+*.tar

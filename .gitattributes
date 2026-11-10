@@ -1,0 +1,7 @@
+# Dockerfile und Skripte müssen auch nach dem Klonen unter Windows LF behalten.
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.woff2 binary
+*.zip binary

@@ -1,0 +1,142 @@
+/*
+  Brücke zwischen Vaadin und dem Aussehen von DocuMan.
+
+  app.css und looks.css sind dieselben wie in der Java-Fassung. Hier bekommen die Vaadin-Komponenten
+  (Lumo) ihre Farben, Formen und Schrift aus denselben Variablen, so folgen sie jedem Aussehen und
+  dem Dunkelmodus.
+*/
+
+html {
+  --lumo-font-family: var(--sans);
+  --lumo-font-size-m: 15px;
+  --lumo-font-size-s: 14px;
+  --lumo-font-size-xs: 13px;
+  --lumo-base-color: var(--surface);
+  --lumo-body-text-color: var(--ink);
+  --lumo-header-text-color: var(--ink);
+  --lumo-secondary-text-color: var(--ink-2);
+  --lumo-tertiary-text-color: var(--ink-3);
+  --lumo-disabled-text-color: color-mix(in srgb, var(--ink) 35%, transparent);
+  --lumo-primary-color: var(--accent);
+  --lumo-primary-color-50pct: color-mix(in srgb, var(--accent) 50%, transparent);
+  --lumo-primary-color-10pct: var(--accent-soft);
+  --lumo-primary-text-color: var(--accent);
+  --lumo-primary-contrast-color: var(--on-accent);
+  --lumo-error-color: var(--danger);
+  --lumo-error-color-50pct: color-mix(in srgb, var(--danger) 50%, transparent);
+  --lumo-error-color-10pct: var(--danger-soft);
+  --lumo-error-text-color: var(--danger);
+  --lumo-error-contrast-color: #fff;
+  --lumo-success-color: var(--success);
+  --lumo-success-color-50pct: color-mix(in srgb, var(--success) 50%, transparent);
+  --lumo-success-color-10pct: var(--success-soft);
+  --lumo-success-text-color: var(--success);
+  --lumo-warning-color: var(--warning);
+  --lumo-warning-color-10pct: var(--warning-soft);
+  --lumo-warning-text-color: var(--warning);
+  --lumo-contrast: var(--ink);
+  --lumo-contrast-5pct: color-mix(in srgb, var(--ink) 5%, transparent);
+  --lumo-contrast-10pct: color-mix(in srgb, var(--ink) 9%, transparent);
+  --lumo-contrast-20pct: color-mix(in srgb, var(--ink) 18%, transparent);
+  --lumo-contrast-30pct: color-mix(in srgb, var(--ink) 28%, transparent);
+  --lumo-contrast-40pct: color-mix(in srgb, var(--ink) 38%, transparent);
+  --lumo-contrast-50pct: color-mix(in srgb, var(--ink) 48%, transparent);
+  --lumo-contrast-60pct: color-mix(in srgb, var(--ink) 58%, transparent);
+  --lumo-contrast-70pct: color-mix(in srgb, var(--ink) 68%, transparent);
+  --lumo-contrast-80pct: color-mix(in srgb, var(--ink) 78%, transparent);
+  --lumo-contrast-90pct: color-mix(in srgb, var(--ink) 88%, transparent);
+  --lumo-shade-5pct: var(--lumo-contrast-5pct);
+  --lumo-shade-10pct: var(--lumo-contrast-10pct);
+  --lumo-shade-20pct: var(--lumo-contrast-20pct);
+  --lumo-border-radius-s: var(--radius-3);
+  --lumo-border-radius-m: var(--radius-2);
+  --lumo-border-radius-l: var(--radius);
+  --lumo-box-shadow-s: var(--shadow-1);
+  --lumo-box-shadow-m: var(--shadow-2);
+  --lumo-box-shadow-l: var(--shadow-3);
+  --lumo-box-shadow-xl: var(--shadow-3);
+}
+
+/* Lumo setzt eigene Hintergründe, DocuMan gibt sie vor. */
+html, body { background: var(--bg); color: var(--ink); }
+body { font: 15px/1.5 var(--sans); }
+
+/* Eingabefelder füllen ihre Spalte wie in den Formularen der Java-Fassung. */
+.field vaadin-text-field, .field vaadin-text-area, .field vaadin-combo-box, .field vaadin-multi-select-combo-box,
+.field vaadin-date-picker, .field vaadin-select, .field vaadin-password-field, .field vaadin-email-field,
+.field vaadin-integer-field, .field vaadin-time-picker {
+  width: 100%; padding: 0;
+}
+.field vaadin-checkbox { margin: 0; }
+
+vaadin-button { font-weight: 550; }
+vaadin-button.plain { font-weight: 500; }
+
+/* Kopf: Suchfeld wie bisher */
+.search-field { flex: 1; max-width: 640px; min-width: 0; padding: 0; }
+.search-field .icon { color: var(--ink-3); }
+.topbar .upload-button { margin-left: auto; }
+
+/* Seitenleiste: Abmelden ist ein Knopf, sieht aber aus wie ein Eintrag. */
+.nav-foot button.nav-item { width: 100%; }
+
+/* Filtermenüs: Vaadin-Knopf mit Popover statt details */
+.filters .dropdown { position: relative; }
+.dropdown-button { font-weight: 550; }
+.dropdown-button .icon { width: 16px; height: 16px; }
+.dropdown-popover::part(content) { padding: 0; }
+.dropdown-popover .dropdown-menu {
+  position: static; display: grid; min-width: 220px; max-height: min(420px, 70vh); margin: 0;
+  border: 0; box-shadow: none;
+}
+
+.segmented vaadin-button {
+  min-width: 38px; margin: 0; padding: 0 8px; border-radius: var(--radius-3);
+  background: transparent; color: var(--ink-3);
+}
+.segmented vaadin-button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+
+/* Karten: Auswahlkästchen von Vaadin */
+.doc-check vaadin-checkbox { margin: 0; }
+
+/* Stapelbearbeitung */
+.bulk vaadin-select { width: 260px; }
+.bulk vaadin-combo-box { width: 280px; }
+.bulk vaadin-button.plain { color: var(--accent); }
+
+/* Meldungen */
+.toast-row { display: flex; align-items: flex-start; gap: 10px; }
+.toast-row span { flex: 1; overflow-wrap: anywhere; }
+.toast-row .icon { width: 16px; height: 16px; }
+
+/* Hochladen */
+.upload-dialog vaadin-upload { width: 100%; }
+.upload-results { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; }
+.upload-results li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+.upload-results .upload-name { overflow-wrap: anywhere; font-weight: 550; }
+.upload-results .upload-note { grid-column: 1; color: var(--ink-2); }
+.upload-results li.ok .upload-note { color: var(--success); }
+.upload-results li.warning .upload-note { color: var(--warning); }
+.upload-results li.error .upload-note { color: var(--danger); }
+.upload-results a { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 13.5px; }
+
+/* Anmeldung: Das Blatt ist so breit wie in der Java-Fassung, das Formular von Vaadin passt sich ein. */
+.auth { width: 100%; box-sizing: border-box; }
+.auth .auth-sheet { width: 100%; max-width: 400px; box-sizing: border-box; }
+.auth vaadin-login-form { width: 100%; max-width: 100%; }
+.auth vaadin-login-form::part(form) { width: auto; max-width: 100%; padding: 0; }
+.auth vaadin-login-form::part(form-title) { display: none; }
+
+/* Dialoge */
+vaadin-dialog-overlay::part(title) { font-size: 17px; font-weight: 620; }
+
+/* Hervorhebungen, die im Original strong-Elemente sind */
+.strong { font-weight: 650; color: var(--ink); }
+.welcome-step .strong, .provider .strong { display: block; }
+
+/* Darstellung unter „Mein Konto“: Kacheln sind Knöpfe statt Optionsfelder */
+button.look-choice { background: none; color: inherit; font: inherit; font-size: 13px; text-align: left; }
+button.look-choice.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+/* Auswahl mehrerer Werte als Kästchengruppe, etwa Wochentage */
+vaadin-checkbox-group.tag-group::part(group-field) { display: flex; flex-wrap: wrap; gap: 4px 14px; }

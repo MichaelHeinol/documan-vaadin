@@ -1,0 +1,295 @@
+/*
+  Aussehen der Oberfläche, identisch in der Django- und der Java-Version.
+
+  Jedes Aussehen legt Farben und Formen als --t-* fest, app.css ordnet sie seinen eigenen Variablen zu.
+  light-dark() wählt nach color-scheme, ein Aussehen braucht dadurch nur einen Block für Hell und Dunkel.
+  Es sind Anmutungen: Schriften nutzt der Browser nur, wenn sie auf dem Gerät installiert sind.
+*/
+
+[data-look="win11"] {
+  --t-font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --t-bg: light-dark(#f3f3f3, #202020);
+  --t-side: light-dark(#eef1f6, #1c1c1c);
+  --t-side-ink: light-dark(#1b1b1b, #ffffff);
+  --t-side-muted: light-dark(#5d5d5d, #c5c5c5);
+  --t-side-hover: light-dark(#e3e6ec, #2d2d2d);
+  --t-side-current: light-dark(#dfe6f0, #333333);
+  --t-side-current-ink: light-dark(#0058a3, #60cdff);
+  --t-panel: light-dark(#fbfbfb, #2b2b2b);
+  --t-sunken: light-dark(#f0f0f0, #333333);
+  --t-line: light-dark(#e5e5e5, #3b3b3b);
+  --t-line-2: light-dark(#d1d1d1, #4c4c4c);
+  --t-ink: light-dark(#1b1b1b, #ffffff);
+  --t-ink-2: light-dark(#5d5d5d, #c5c5c5);
+  --t-ink-3: light-dark(#6e6e6e, #a6a6a6);
+  --t-accent: light-dark(#0067c0, #60cdff);
+  --t-accent-2: light-dark(#005a9e, #99ebff);
+  --t-accent-soft: light-dark(#e0eefa, #1f3a4d);
+  --t-on-accent: light-dark(#ffffff, #002a42);
+  --t-radius: 8px;
+  --t-radius-2: 5px;
+  --t-radius-3: 4px;
+  --t-shadow-1: 0 1px 2px rgb(0 0 0 / 6%);
+  --t-shadow-2: 0 2px 8px rgb(0 0 0 / 10%);
+  --t-shadow-3: 0 8px 28px rgb(0 0 0 / 22%);
+}
+
+[data-look="win10"] {
+  --t-font: "Segoe UI", system-ui, sans-serif;
+  --t-bg: light-dark(#f2f2f2, #1f1f1f);
+  --t-side: light-dark(#e6e6e6, #2b2b2b);
+  --t-side-ink: light-dark(#000000, #ffffff);
+  --t-side-muted: light-dark(#4c4c4c, #c8c8c8);
+  --t-side-hover: light-dark(#d4d4d4, #3d3d3d);
+  --t-side-current: light-dark(#006cbe, #006cbe);
+  --t-side-current-ink: #ffffff;
+  --t-panel: light-dark(#ffffff, #2b2b2b);
+  --t-sunken: light-dark(#ececec, #383838);
+  --t-line: light-dark(#d9d9d9, #474747);
+  --t-line-2: light-dark(#adadad, #6d6d6d);
+  --t-ink: light-dark(#000000, #ffffff);
+  --t-ink-2: light-dark(#4c4c4c, #c8c8c8);
+  --t-ink-3: light-dark(#666666, #a0a0a0);
+  --t-accent: light-dark(#006cbe, #4cc2ff);
+  --t-accent-2: light-dark(#005a9e, #99ebff);
+  --t-accent-soft: light-dark(#d9ebf9, #123a55);
+  --t-on-accent: light-dark(#ffffff, #002a42);
+  --t-radius: 0;
+  --t-radius-2: 0;
+  --t-radius-3: 0;
+  --t-shadow-1: none;
+  --t-shadow-2: 0 2px 4px rgb(0 0 0 / 12%);
+  --t-shadow-3: 0 6px 18px rgb(0 0 0 / 26%);
+}
+
+[data-look="win7"] {
+  --t-font: "Segoe UI", Tahoma, system-ui, sans-serif;
+  --t-bg: light-dark(#dce8f5, #18212b);
+  --t-wallpaper: linear-gradient(180deg, light-dark(#e4eef9, #1b2530), light-dark(#cfe0f2, #141b23));
+  --t-side: linear-gradient(180deg, light-dark(#dcebfa, #24384d) 0%, light-dark(#b9d3ee, #17232f) 100%);
+  --t-side-ink: light-dark(#10253b, #eaf3fc);
+  --t-side-muted: light-dark(#34506c, #b7cbdf);
+  --t-side-hover: light-dark(#ffffff80, #ffffff1f);
+  --t-side-current: linear-gradient(180deg, light-dark(#fdfeff, #3b6b99), light-dark(#d3e7fb, #2a5078));
+  --t-side-current-ink: light-dark(#10253b, #ffffff);
+  --t-panel: light-dark(#ffffff, #202b36);
+  --t-sunken: light-dark(#eef4fb, #2a3744);
+  --t-line: light-dark(#b9cde2, #3a4b5c);
+  --t-line-2: light-dark(#8faac6, #52687e);
+  --t-ink: light-dark(#10253b, #eaf3fc);
+  --t-ink-2: light-dark(#3c546c, #b7cbdf);
+  --t-ink-3: light-dark(#51687f, #93a9be);
+  --t-accent: light-dark(#0f62ad, #6cb7f5);
+  --t-accent-2: light-dark(#0b4f8f, #9dd0fa);
+  --t-accent-soft: light-dark(#dcebfa, #233f5a);
+  --t-on-accent: light-dark(#ffffff, #06233d);
+  --t-button: linear-gradient(180deg, light-dark(#f6f6f6, #3b4957) 0%, light-dark(#ebebeb, #303c48) 49%, light-dark(#dddddd, #27323d) 50%, light-dark(#cfcfcf, #222c36) 100%);
+  --t-primary: linear-gradient(180deg, light-dark(#2a78c0, #8fcbf9) 0%, light-dark(#1f74c4, #6cb7f5) 49%, light-dark(#0f62ad, #56a5e8) 50%, light-dark(#0d5aa0, #4d9be0) 100%);
+  --t-radius: 6px;
+  --t-radius-2: 3px;
+  --t-radius-3: 3px;
+  --t-shadow-1: 0 1px 2px rgb(16 37 59 / 18%);
+  --t-shadow-2: 0 2px 8px rgb(16 37 59 / 22%);
+  --t-shadow-3: 0 8px 26px rgb(16 37 59 / 38%);
+}
+
+[data-look="vista"] {
+  --t-font: "Segoe UI", Tahoma, system-ui, sans-serif;
+  --t-bg: light-dark(#e9edf2, #15191e);
+  --t-side: linear-gradient(180deg, #33475c 0%, #1a2632 55%, #0e151c 100%);
+  --t-side-ink: #f1f6fb;
+  --t-side-muted: #c0ccd8;
+  --t-side-hover: #ffffff24;
+  --t-side-current: linear-gradient(180deg, #2f76b4 0%, #2a6eab 49%, #1d5a94 50%, #1b5189 100%);
+  --t-side-current-ink: #ffffff;
+  --t-panel: light-dark(#ffffff, #1f262e);
+  --t-sunken: light-dark(#f0f3f7, #2a333d);
+  --t-line: light-dark(#c8d2dc, #39444f);
+  --t-line-2: light-dark(#9aa8b6, #55636f);
+  --t-ink: light-dark(#14202b, #f1f6fb);
+  --t-ink-2: light-dark(#44525f, #c0ccd8);
+  --t-ink-3: light-dark(#5a6875, #9aa8b6);
+  --t-accent: light-dark(#1d5a94, #7dbdf0);
+  --t-accent-2: light-dark(#16477a, #a9d5f7);
+  --t-accent-soft: light-dark(#dfeaf5, #1f3a52);
+  --t-on-accent: light-dark(#ffffff, #071f33);
+  --t-button: linear-gradient(180deg, light-dark(#fbfbfb, #3c4752) 0%, light-dark(#eeeeee, #2f3944) 49%, light-dark(#dddddd, #252e37) 50%, light-dark(#d3d3d3, #202830) 100%);
+  --t-primary: linear-gradient(180deg, light-dark(#2f76b4, #a9d5f7) 0%, light-dark(#2a6eab, #7dbdf0) 49%, light-dark(#1d5a94, #66abe3) 50%, light-dark(#1b5189, #5a9fd8) 100%);
+  --t-radius: 7px;
+  --t-radius-2: 3px;
+  --t-radius-3: 3px;
+  --t-shadow-1: 0 1px 2px rgb(0 0 0 / 22%);
+  --t-shadow-2: 0 2px 10px rgb(0 0 0 / 26%);
+  --t-shadow-3: 0 10px 30px rgb(0 0 0 / 42%);
+}
+
+[data-look="winxp"] {
+  --t-font: Tahoma, "Segoe UI", Verdana, system-ui, sans-serif;
+  --t-bg: light-dark(#ece9d8, #1c2230);
+  --t-side: linear-gradient(180deg, light-dark(#3f6fd0, #2b4a9b) 0%, light-dark(#2f4fae, #1a2c63) 100%);
+  --t-side-ink: #ffffff;
+  --t-side-muted: #ffffff;
+  --t-side-hover: #ffffff2e;
+  --t-side-current: linear-gradient(180deg, #2f6fe0 0%, #1d4fc0 100%);
+  --t-side-current-ink: #ffffff;
+  --t-panel: light-dark(#ffffff, #252c3d);
+  --t-sunken: light-dark(#f5f3e8, #2e374b);
+  --t-line: light-dark(#aca899, #46506a);
+  --t-line-2: light-dark(#7f9db9, #5e6c8c);
+  --t-ink: light-dark(#000000, #f4f6fb);
+  --t-ink-2: light-dark(#3b3b3b, #c9d1e3);
+  --t-ink-3: light-dark(#575757, #a4afc8);
+  --t-accent: light-dark(#1f52c4, #8db1f5);
+  --t-accent-2: light-dark(#183f9a, #b6cdfa);
+  --t-accent-soft: light-dark(#d9e4fb, #26376a);
+  --t-on-accent: light-dark(#ffffff, #0c1a3f);
+  --t-button: linear-gradient(180deg, light-dark(#ffffff, #3a445c) 0%, light-dark(#f4f2e8, #333c54) 60%, light-dark(#dcd8c5, #2f3850) 100%);
+  --t-primary: linear-gradient(180deg, light-dark(#2e862e, #a8dca8) 0%, light-dark(#2c802c, #94d094) 55%, light-dark(#226f22, #8acb8a) 100%);
+  --t-on-primary: light-dark(#ffffff, #0c2b0c);
+  --t-radius: 7px;
+  --t-radius-2: 3px;
+  --t-radius-3: 3px;
+  --t-shadow-1: 1px 1px 2px rgb(0 0 0 / 22%);
+  --t-shadow-2: 2px 2px 5px rgb(0 0 0 / 26%);
+  --t-shadow-3: 3px 3px 12px rgb(0 0 0 / 40%);
+}
+
+[data-look="macos"] {
+  --t-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --t-bg: light-dark(#f5f5f7, #1e1e1e);
+  --t-side: light-dark(#e8e8ed, #2a2a2c);
+  --t-side-ink: light-dark(#1d1d1f, #f5f5f7);
+  --t-side-muted: light-dark(#5f5f64, #b0b0b6);
+  --t-side-hover: light-dark(#d9d9df, #3a3a3d);
+  --t-side-current: light-dark(#d2d2d9, #464649);
+  --t-side-current-ink: light-dark(#1d1d1f, #ffffff);
+  --t-panel: light-dark(#ffffff, #2c2c2e);
+  --t-sunken: light-dark(#f2f2f5, #3a3a3c);
+  --t-line: light-dark(#e2e2e7, #404043);
+  --t-line-2: light-dark(#c8c8ce, #58585c);
+  --t-ink: light-dark(#1d1d1f, #f5f5f7);
+  --t-ink-2: light-dark(#5f5f64, #b0b0b6);
+  --t-ink-3: light-dark(#6e6e73, #98989d);
+  --t-accent: light-dark(#0a6fe0, #4aa3ff);
+  --t-accent-2: light-dark(#075bb9, #7bbcff);
+  --t-accent-soft: light-dark(#e1eefd, #1c3a5c);
+  --t-on-accent: light-dark(#ffffff, #05213f);
+  --t-radius: 12px;
+  --t-radius-2: 8px;
+  --t-radius-3: 6px;
+  --t-shadow-1: 0 1px 2px rgb(0 0 0 / 6%);
+  --t-shadow-2: 0 4px 14px rgb(0 0 0 / 10%);
+  --t-shadow-3: 0 14px 40px rgb(0 0 0 / 26%);
+}
+
+[data-look="ubuntu"] {
+  --t-font: Ubuntu, "Noto Sans", Cantarell, system-ui, sans-serif;
+  --t-bg: light-dark(#f7f7f7, #2a2a2a);
+  --t-side: linear-gradient(180deg, #3b1a33 0%, #2c0f27 100%);
+  --t-side-ink: #ffffff;
+  --t-side-muted: #e0d3dc;
+  --t-side-hover: #ffffff1f;
+  --t-side-current: #c8451a;
+  --t-side-current-ink: #ffffff;
+  --t-panel: light-dark(#ffffff, #333333);
+  --t-sunken: light-dark(#efefef, #3d3d3d);
+  --t-line: light-dark(#dedede, #484848);
+  --t-line-2: light-dark(#bdbdbd, #5e5e5e);
+  --t-ink: light-dark(#2c2c2c, #f7f7f7);
+  --t-ink-2: light-dark(#585858, #cfcfcf);
+  --t-ink-3: light-dark(#6c6c6c, #acacac);
+  --t-accent: light-dark(#c8451a, #f39670);
+  --t-accent-2: light-dark(#a83814, #f8b89c);
+  --t-accent-soft: light-dark(#fbe7df, #4d2b1e);
+  --t-on-accent: light-dark(#ffffff, #3a1405);
+  --t-radius: 10px;
+  --t-radius-2: 6px;
+  --t-radius-3: 5px;
+  --t-shadow-1: 0 1px 2px rgb(0 0 0 / 10%);
+  --t-shadow-2: 0 2px 8px rgb(0 0 0 / 14%);
+  --t-shadow-3: 0 10px 30px rgb(0 0 0 / 30%);
+}
+
+[data-look="gnome"] {
+  --t-font: "Adwaita Sans", Cantarell, "Noto Sans", system-ui, sans-serif;
+  --t-bg: light-dark(#fafafb, #222226);
+  --t-side: light-dark(#ebebed, #2e2e32);
+  --t-side-ink: light-dark(#2e2e33, #ffffff);
+  --t-side-muted: light-dark(#5e5e66, #c0c0c6);
+  --t-side-hover: light-dark(#dedee1, #3a3a3f);
+  --t-side-current: light-dark(#d7d7db, #46464c);
+  --t-side-current-ink: light-dark(#2e2e33, #ffffff);
+  --t-panel: light-dark(#ffffff, #36363a);
+  --t-sunken: light-dark(#f0f0f2, #414146);
+  --t-line: light-dark(#e3e3e6, #48484e);
+  --t-line-2: light-dark(#c9c9ce, #5d5d63);
+  --t-ink: light-dark(#2e2e33, #ffffff);
+  --t-ink-2: light-dark(#5e5e66, #c0c0c6);
+  --t-ink-3: light-dark(#6f6f77, #a3a3aa);
+  --t-accent: light-dark(#1c71d8, #78aeed);
+  --t-accent-2: light-dark(#1a5fb4, #a5c9f4);
+  --t-accent-soft: light-dark(#dfebfa, #24406a);
+  --t-on-accent: light-dark(#ffffff, #00224a);
+  --t-radius: 12px;
+  --t-radius-2: 9px;
+  --t-radius-3: 6px;
+  --t-shadow-1: none;
+  --t-shadow-2: 0 1px 4px rgb(0 0 0 / 10%);
+  --t-shadow-3: 0 8px 30px rgb(0 0 0 / 24%);
+}
+
+[data-look="kde"] {
+  --t-font: "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  --t-bg: light-dark(#eff0f1, #1b1e20);
+  --t-side: light-dark(#fcfcfc, #232629);
+  --t-side-ink: light-dark(#232629, #fcfcfc);
+  --t-side-muted: light-dark(#4d5359, #bdc3c7);
+  --t-side-hover: light-dark(#d6ebf8, #2d4252);
+  --t-side-current: light-dark(#2378b0, #3daee9);
+  --t-side-current-ink: light-dark(#ffffff, #03202f);
+  --t-panel: light-dark(#fcfcfc, #2a2e32);
+  --t-sunken: light-dark(#eff0f1, #31363b);
+  --t-line: light-dark(#d1d5d9, #43494f);
+  --t-line-2: light-dark(#b0b6bc, #5a6168);
+  --t-ink: light-dark(#232629, #fcfcfc);
+  --t-ink-2: light-dark(#4d5359, #bdc3c7);
+  --t-ink-3: light-dark(#5f666c, #9aa1a7);
+  --t-accent: light-dark(#2378b0, #3daee9);
+  --t-accent-2: light-dark(#1b5f8c, #7cc9f1);
+  --t-accent-soft: light-dark(#dcecf6, #1d3a4a);
+  --t-on-accent: light-dark(#ffffff, #03202f);
+  --t-radius: 5px;
+  --t-radius-2: 3px;
+  --t-radius-3: 3px;
+  --t-shadow-1: 0 1px 2px rgb(0 0 0 / 10%);
+  --t-shadow-2: 0 2px 6px rgb(0 0 0 / 14%);
+  --t-shadow-3: 0 6px 22px rgb(0 0 0 / 28%);
+}
+
+/* Seitenleiste und Knöpfe: Farbverläufe und helle Schrift auf dunkler Leiste */
+:root[data-look]:not([data-look="standard"]) body { background: var(--t-wallpaper, var(--t-bg)) fixed; }
+:root[data-look]:not([data-look="standard"]) :is(.sidebar, .spine) { background: var(--t-side); color: var(--t-side-ink); }
+:root[data-look]:not([data-look="standard"]) .brand,
+:root[data-look]:not([data-look="standard"]) .brand:hover { color: var(--t-side-ink); }
+:root[data-look]:not([data-look="standard"]) :is(.sidebar, .spine) :is(.brand-version, .nav-title, .spine-title, .nav-count, .spine-count:not(.alert)) { color: var(--t-side-muted); }
+:root[data-look]:not([data-look="standard"]) :is(.sidebar .nav-item, .spine a.item, .spine button.item) { color: var(--t-side-ink); }
+:root[data-look]:not([data-look="standard"]) :is(.sidebar .nav-item, .spine a.item, .spine button.item):hover { background: var(--t-side-hover); color: var(--t-side-ink); }
+:root[data-look]:not([data-look="standard"]) :is(.sidebar .nav-item, .spine a.item)[aria-current] { background: var(--t-side-current); color: var(--t-side-current-ink); }
+:root[data-look]:not([data-look="standard"]) .button:not(.primary, .danger-solid) { background: var(--t-button, var(--t-panel)); }
+:root[data-look]:not([data-look="standard"]) .button:not(.primary, .danger-solid):hover { filter: brightness(.97); }
+:root[data-look]:not([data-look="standard"]) .button.primary { background: var(--t-primary, var(--t-accent)); color: var(--t-on-primary, var(--t-on-accent)); }
+:root[data-look]:not([data-look="standard"]) .button.primary:hover { color: var(--t-on-primary, var(--t-on-accent)); filter: brightness(1.06); }
+
+/* Auswahl unter „Mein Konto“. Die Vorschau zeigt jedes Aussehen unabhängig vom gerade aktiven. */
+.look-form { max-width: 720px; }
+.look-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
+.look-choice { position: relative; display: grid; gap: 6px; padding: 7px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; cursor: pointer; }
+.look-choice:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.look-choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.look-choice input { position: absolute; width: 1px; min-height: 0; height: 1px; padding: 0; opacity: 0; }
+.look-preview { display: grid; grid-template-columns: 32% 1fr; height: 62px; overflow: hidden; border: 1px solid var(--t-line); border-radius: min(var(--t-radius-2), 8px); background: var(--t-wallpaper, var(--t-bg)); }
+.look-preview i { display: block; }
+.look-side { background: var(--t-side); }
+.look-main { display: grid; align-content: start; gap: 5px; padding: 7px; }
+.look-bar { width: 60%; height: 8px; border-radius: min(var(--t-radius-3), 4px); background: var(--t-primary, var(--t-accent)); }
+.look-card { height: 26px; border: 1px solid var(--t-line); border-radius: min(var(--t-radius-3), 4px); background: var(--t-panel); }

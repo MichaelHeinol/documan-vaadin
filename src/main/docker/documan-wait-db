@@ -1,0 +1,26 @@
+#!/bin/sh
+# Wartet, bis PostgreSQL Verbindungen annimmt, und startet dann den eigentlichen Befehl.
+#
+# Beim Hochfahren eines NAS kommt die Datenbank oft nach DocuMan. Ohne Warten bräche der Start
+# ab, und manche NAS starten abgebrochene Container nicht von selbst wieder.
+# Dieselbe Datei liegt in DocuMan (docker/) und DocuMan-Java (src/main/docker/).
+host="${POSTGRES_HOST:-}"
+limit="${DB_WAIT_SECONDS:-300}"
+if [ -n "$host" ]; then
+    waited=0
+    # Ohne -U fragt pg_isready das System nach dem eigenen Benutzernamen. Läuft der Container unter einer
+    # fremden Benutzer-ID wie auf dem NAS, scheitert das, und die Datenbank wird gar nicht erst gefragt.
+    until pg_isready -q -h "$host" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-documan}" \
+            -d "${POSTGRES_DB:-documan}" -t 3; do
+        if [ "$waited" -ge "$limit" ]; then
+            echo "Die Datenbank $host antwortet nach $waited Sekunden nicht, DocuMan startet trotzdem." >&2
+            break
+        fi
+        if [ $((waited % 30)) -eq 0 ]; then
+            echo "Warte auf die Datenbank $host ..." >&2
+        fi
+        sleep 2
+        waited=$((waited + 2))
+    done
+fi
+exec "$@"

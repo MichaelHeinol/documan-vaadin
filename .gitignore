@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+/data/
+/consume/
+/backup/
+/umzug-probe/
+/target/
+nas-paket/*.tar
+.claude/
+.idea/
+*.iml
