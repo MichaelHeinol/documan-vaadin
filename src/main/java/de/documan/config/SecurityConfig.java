@@ -33,8 +33,12 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, SessionRegistry sessions) throws Exception {
+        // Vaadin sperrt alles, was keine eigene Seite ist. Die Dateien liefert ein eigener Controller aus, sie
+        // brauchen deshalb eine ausdrückliche Freigabe für angemeldete Benutzer.
         http.authorizeHttpRequests(requests -> requests
-                .requestMatchers("/healthz", "/css/**", "/fonts/**", "/favicon*.svg").permitAll());
+                .requestMatchers("/healthz", "/css/**", "/fonts/**", "/favicon*.svg").permitAll()
+                .requestMatchers("/dokumente/*/vorschau", "/dokumente/*/bild", "/dokumente/*/download/*")
+                .authenticated());
         http.with(VaadinSecurityConfigurer.vaadin(), vaadin -> vaadin.loginView(LoginView.class, "/login?abgemeldet"));
         http.sessionManagement(session -> session.maximumSessions(-1).sessionRegistry(sessions).expiredUrl("/login"));
         http.headers(headers -> headers
