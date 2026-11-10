@@ -4,8 +4,9 @@ Selbst gehostetes Dokumentenmanagement für zu Hause, angelehnt an paperless:
 Scans, E-Mail-Anhänge und Uploads werden automatisch per OCR durchsuchbar gemacht
 und mit Kategorien, Absendernamen, Dokumenttypen und Tags abgelegt.
 
-Dies ist die Vaadin-Version von DocuMan. Sie bietet denselben Funktionsumfang wie die Django- und die
-Java-Version. Hintergrunddienst, Datenbank und Sicherungen teilt sie mit der Java-Version, die Oberfläche ist
+Dies ist die Vaadin-Version von DocuMan. Sie bietet denselben Funktionsumfang wie die Java-Version und löst
+wie diese die Django-Version ab, die seit dem 10.11.2026 nicht mehr weiterentwickelt wird.
+Hintergrunddienst, Datenbank und Sicherungen teilt sie mit der Java-Version, die Oberfläche ist
 mit Vaadin gebaut: Seiten aktualisieren sich per Push, ohne neu zu laden.
 
 - **OCR** mit OCRmyPDF/Tesseract (Deutsch und Englisch), Scans werden gedreht und begradigt
@@ -17,7 +18,7 @@ mit Vaadin gebaut: Seiten aktualisieren sich per Push, ohne neu zu laden.
 - **Eingespielt von:** Jedes Dokument merkt sich, woher es kam, die Übersicht zeigt das als 3D-Tortengrafik
 - **Automatische Zuordnung** von Absendername, Typ, Tags und Dokumentdatum
 - **Datensicherung** als ZIP per Knopfdruck oder Zeitplan, Wiederherstellung auch nach einer Neuinstallation
-- **Umzug** von und zur Django-Version, nur für Admins. Mit der Java-Version teilt diese Fassung Datenbank und
+- **Umzug** aus der eingestellten Django-Version, nur für Admins. Mit der Java-Version teilt diese Fassung Datenbank und
   Sicherungen
 - **E-Mail-Benachrichtigungen:** Neue Benutzer erhalten ihre Zugangsdaten mit der Adresse des Systems
 - **Moderne Oberfläche** auf Deutsch, für Bildschirm und Handy, mit zehn Aussehen und Dunkelmodus
@@ -26,8 +27,8 @@ mit Vaadin gebaut: Seiten aktualisieren sich per Push, ohne neu zu laden.
 ## Installation auf dem NAS
 
 Voraussetzung ist Docker mit Compose (Synology: Container Manager, QNAP: Container Station).
-Die Vaadin-Version läuft neben der Django- und der Java-Version: Sie hat einen eigenen Projektnamen, eigene
-Daten und standardmäßig den Port 8002.
+Die Vaadin-Version läuft auch neben der Java-Version oder einer bestehenden Django-Installation: Sie hat
+einen eigenen Projektnamen, eigene Daten und standardmäßig den Port 8002.
 
 1. Projektordner auf das NAS kopieren, z. B. nach `/volume1/docker/documan-vaadin`.
 
