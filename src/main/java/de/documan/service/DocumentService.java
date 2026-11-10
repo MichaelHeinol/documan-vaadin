@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
+import de.documan.config.DocuManProperties;
 import de.documan.domain.Document;
 import de.documan.domain.DocumentStatus;
 import de.documan.domain.MasterItem;
@@ -22,13 +23,21 @@ public class DocumentService {
     private final MasterRepository master;
     private final Reindexer reindexer;
     private final MediaStore media;
+    private final DocuManProperties properties;
 
     public DocumentService(DocumentRepository documents, MasterRepository master, Reindexer reindexer,
-            MediaStore media) {
+            MediaStore media, DocuManProperties properties) {
         this.documents = documents;
         this.master = master;
         this.reindexer = reindexer;
         this.media = media;
+        this.properties = properties;
+    }
+
+    /** Absendername, Typ oder Datum haben sich geändert: Der Titel wird neu gebildet, die Dateien ziehen um. */
+    private void renamed(List<Long> ids) {
+        documents.requestFileSync(ids.toArray(Long[]::new));
+        documents.composeTitles(ids, properties.getTimeZone());
     }
 
     private Long masterId(MasterKind kind, String name) {
@@ -45,7 +54,7 @@ public class DocumentService {
             master.getOrCreate(MasterKind.TAG, name).map(MasterItem::id).ifPresent(tags::add);
         }
         documents.setTags(id, tags);
-        documents.requestFileSync(new Long[] {id});
+        renamed(List.of(id));
         reindexer.reindex(id);
     }
 
@@ -87,16 +96,14 @@ public class DocumentService {
     }
 
     public void setCorrespondent(List<Long> ids, String name) {
-        Long[] selected = ids.toArray(Long[]::new);
-        documents.setCorrespondent(selected, masterId(MasterKind.CORRESPONDENT, name));
-        documents.requestFileSync(selected);
+        documents.setCorrespondent(ids.toArray(Long[]::new), masterId(MasterKind.CORRESPONDENT, name));
+        renamed(ids);
         reindexer.reindex(ids);
     }
 
     public void setDocumentType(List<Long> ids, String name) {
-        Long[] selected = ids.toArray(Long[]::new);
-        documents.setDocumentType(selected, masterId(MasterKind.DOCUMENT_TYPE, name));
-        documents.requestFileSync(selected);
+        documents.setDocumentType(ids.toArray(Long[]::new), masterId(MasterKind.DOCUMENT_TYPE, name));
+        renamed(ids);
         reindexer.reindex(ids);
     }
 
@@ -121,21 +128,23 @@ public class DocumentService {
     /** Namen von Stammdaten stehen im Suchvektor, Änderungen müssen also nachgezogen werden. */
     public void reindexMaster(MasterKind kind, long id) {
         List<Long> affected = master.documentIds(kind, id);
-        reindexer.reindex(affected);
         refileIfNamed(kind, affected);
+        reindexer.reindex(affected);
     }
 
     public void deleteMaster(MasterKind kind, long id) {
         List<Long> affected = master.documentIds(kind, id);
         master.delete(kind, id);
-        reindexer.reindex(affected);
         refileIfNamed(kind, affected);
+        reindexer.reindex(affected);
     }
 
-    /** Absendername und Dokumenttyp bestimmen Ordner und Dateinamen. */
+    /** Absendername und Dokumenttyp bestimmen Titel und Dateinamen, die Kategorie den Ordner. */
     private void refileIfNamed(MasterKind kind, List<Long> ids) {
-        if (kind != MasterKind.TAG) {
+        if (kind == MasterKind.CATEGORY) {
             documents.requestFileSync(ids.toArray(Long[]::new));
+        } else if (kind != MasterKind.TAG) {
+            renamed(ids);
         }
     }
 }

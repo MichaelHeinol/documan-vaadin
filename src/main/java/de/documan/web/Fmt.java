@@ -24,6 +24,7 @@ public class Fmt {
     private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private static final DateTimeFormatter SHORT = DateTimeFormatter.ofPattern("dd.MM. HH:mm");
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter COMPACT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final List<String> UNITS = List.of("Bytes", "KB", "MB", "GB", "TB");
     private static final int STEP = 1024;
 
@@ -47,6 +48,11 @@ public class Fmt {
 
     public String date(Document document) {
         return document.documentDate() != null ? date(document.documentDate()) : date(document.added());
+    }
+
+    /** Tag des Eingangs als JJJJMMTT, wie er im Titel steht, solange kein Dokumentdatum gesetzt ist. */
+    public String compactDate(Instant moment) {
+        return moment == null ? "" : COMPACT.format(local(moment));
     }
 
     public String dateTime(Instant moment) {

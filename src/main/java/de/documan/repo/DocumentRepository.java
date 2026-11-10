@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -285,6 +286,51 @@ public class DocumentRepository {
     /** Kategorie, Titel oder Datum haben sich geändert: Der Worker verschiebt die Dateien. */
     public void requestFileSync(Long[] ids) {
         jdbc.sql("UPDATE document SET file_sync_pending = true WHERE id = ANY(?)").param(ids).update();
+    }
+
+    /**
+     * Setzt den Titel auf Absendername_Dokumenttyp_Datum (JJJJMMTT), wie der Dateiname. Fehlt Absendername oder
+     * Typ, entfällt er. Ohne Dokumentdatum zählt der Tag des Eingangs.
+     *
+     * <p>Ohne beide Namen bleibt ein eigener Titel, wie er ist. Nur ein zuvor so gebildeter Titel, erkennbar am
+     * Datum am Ende, wird wieder zum Dateinamen wie beim Import. Sonst stünde das Datum im Dateinamen doppelt.
+     *
+     * @return die Dokumente, deren Titel sich geändert hat
+     */
+    public List<Long> composeTitles(Collection<Long> ids, ZoneId zone) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Long[] selected = ids.toArray(Long[]::new);
+        List<Long> changed = new ArrayList<>(jdbc.sql("""
+                WITH composed AS (
+                    SELECT d.id, left(concat_ws('_', c.name, t.name,
+                        to_char(COALESCE(d.document_date, (d.added AT TIME ZONE ?)::date), 'YYYYMMDD')), 300) AS title
+                    FROM document d
+                    LEFT JOIN correspondent c ON c.id = d.correspondent_id
+                    LEFT JOIN document_type t ON t.id = d.document_type_id
+                    WHERE d.id = ANY(?) AND (c.id IS NOT NULL OR t.id IS NOT NULL))
+                UPDATE document d SET title = composed.title FROM composed
+                WHERE d.id = composed.id AND d.title <> composed.title
+                RETURNING d.id
+                """)
+                .params(zone.getId(), selected)
+                .query(Long.class).list());
+        changed.addAll(jdbc.sql("""
+                WITH named AS (
+                    SELECT id, btrim(replace(regexp_replace(regexp_replace(original_filename, '^.*[/\\\\]', ''),
+                        '(.)\\.[^.]*$', '\\1'), '_', ' ')) AS title
+                    FROM document
+                    WHERE id = ANY(?) AND correspondent_id IS NULL AND document_type_id IS NULL
+                      AND title ~ '_[0-9]{8}$')
+                UPDATE document d SET title = left(CASE WHEN named.title = '' THEN 'Unbenanntes Dokument'
+                    ELSE named.title END, 300)
+                FROM named WHERE d.id = named.id
+                RETURNING d.id
+                """)
+                .param(selected)
+                .query(Long.class).list());
+        return changed;
     }
 
     /** Sperrt das nächste Dokument, dessen Dateien umziehen müssen. Laufende warten noch. */

@@ -29,7 +29,8 @@ import de.documan.repo.MasterRepository;
 /**
  * Legt Dateien nach ihrer Kategorisierung ab und benennt sie danach.
  *
- * <p>Beispiel: originals/Finanzen/Energie/Stadtwerke Musterstadt/Rechnung/Stadtwerke Musterstadt_Rechnung_20260314.pdf
+ * <p>Beispiel: originals/Finanzen/Energie/Stadtwerke Musterstadt_Rechnung_20260314.pdf. Die Ordner bildet nur die
+ * Kategorie ab, ohne Kategorie liegt die Datei unter „Ohne Kategorie“.
  *
  * <p>Verschoben wird nur im Worker. So läuft es nie gleichzeitig mit einer Sicherung, und die
  * Weboberfläche muss bei einem umbenannten Absendernamen nicht auf tausende Dateien warten.
@@ -48,11 +49,9 @@ public class FilingService {
     // Ein sehr langer Dokumenttyp soll den Absender nicht verdrängen.
     private static final int MAX_TYPE_BYTES = 40;
     private static final String FALLBACK_NAME = "Dokument";
-    private static final String NO_CORRESPONDENT = "Ohne Absendername";
-    private static final String NO_DOCUMENT_TYPE = "Ohne Dokumenttyp";
     private static final String NO_CATEGORY = "Ohne Kategorie";
-    // Bis zu zehn Kategoriestufen und Dokumenttyp, ohne Kategorie drei Ebenen. Früher lagen Dateien unter
-    // Kategorie und Absendername, das deckt die Zahl ebenfalls ab.
+    // Bis zu zehn Kategoriestufen. Früher kamen Absendername und Dokumenttyp als Ordner dazu, beim Aufräumen
+    // alter Ablagen zählen sie mit.
     private static final int FOLDER_LEVELS = CategoryPaths.MAX_LEVELS + 2;
 
     private final DocuManProperties properties;
@@ -60,9 +59,11 @@ public class FilingService {
     private final MediaStore media;
     private final MasterRepository master;
     private final TransactionTemplate transaction;
+    private final Reindexer reindexer;
 
     public FilingService(DocuManProperties properties, DocumentRepository documents, MediaStore media,
-            MasterRepository master, PlatformTransactionManager transactions) {
+            MasterRepository master, PlatformTransactionManager transactions, Reindexer reindexer) {
+        this.reindexer = reindexer;
         this.properties = properties;
         this.documents = documents;
         this.media = media;
@@ -99,16 +100,23 @@ public class FilingService {
         }
     }
 
-    /** Absender, Typ und Belegdatum. Ohne Absendername steht der Titel an seiner Stelle. */
+    /**
+     * Absender, Typ und Belegdatum wie der Titel. Fehlt eines davon, entfällt es. Ohne Absender und Typ steht
+     * der Titel an ihrer Stelle.
+     */
     public String fileStem(Document document) {
         LocalDate day = document.documentDate() != null ? document.documentDate()
                 : document.added().atZone(properties.getTimeZone()).toLocalDate();
         String kind = document.documentTypeName() == null ? "" : cleanName(document.documentTypeName(), MAX_TYPE_BYTES);
         String tail = kind.isEmpty() ? day.format(FILE_DATE) : kind + "_" + day.format(FILE_DATE);
-        String sender = document.correspondentName() != null ? document.correspondentName() : document.title();
+        String sender = document.correspondentName() != null ? document.correspondentName()
+                : kind.isEmpty() ? document.title() : "";
         // Ein zu langer Absender wird gekürzt, Typ und Datum bleiben vollständig.
         String name = cleanName(sender, MAX_NAME_BYTES - tail.getBytes(StandardCharsets.UTF_8).length - 1);
-        return (name.isEmpty() ? FALLBACK_NAME : name) + "_" + tail;
+        if (name.isEmpty()) {
+            return kind.isEmpty() ? FALLBACK_NAME + "_" + tail : tail;
+        }
+        return name + "_" + tail;
     }
 
     /** Wie die abgelegte Datei mit ihrem Index. Noch nicht abgelegt zählt der künftige Name. */
@@ -119,30 +127,18 @@ public class FilingService {
         return (filed ? stored : expected) + extension;
     }
 
-    /**
-     * Die Kategoriestufen und der Dokumenttyp. Der Absender steht schon im Dateinamen. Einen eigenen Ordner
-     * bekommt er nur ohne Kategorie, unter „Ohne Kategorie“ ordnet sonst nichts die Dateien.
-     */
+    /** Die Kategoriestufen von oben nach unten, ohne Kategorie „Ohne Kategorie“. */
     public String folderOf(Document document) {
         return categoryFolder(new CategoryPaths(master.categories()).path(document.categoryId()), document);
     }
 
     /** Wie folderOf, mit den Namen der Kategoriestufen von oben nach unten. */
     public static String categoryFolder(List<String> categories, Document document) {
-        List<String> parts = new ArrayList<>();
-        categories.stream().limit(CategoryPaths.MAX_LEVELS).map(name -> folderName(name, ""))
-                .filter(name -> !name.isEmpty()).forEach(parts::add);
-        if (parts.isEmpty()) {
-            parts.add(NO_CATEGORY);
-            parts.add(folderName(document.correspondentName(), NO_CORRESPONDENT));
-        }
-        parts.add(folderName(document.documentTypeName(), NO_DOCUMENT_TYPE));
-        return String.join("/", parts);
-    }
-
-    private static String folderName(String name, String fallback) {
-        String cleaned = name == null ? "" : cleanName(name);
-        return cleaned.isEmpty() ? fallback : cleaned;
+        List<String> parts = categories.stream().limit(CategoryPaths.MAX_LEVELS)
+                .map(name -> name == null ? "" : cleanName(name))
+                .filter(name -> !name.isEmpty())
+                .toList();
+        return parts.isEmpty() ? NO_CATEGORY : String.join("/", parts);
     }
 
     /** Nach einem Absturz liegt die eigene Datei schon am Ziel, der Datensatz aber noch nicht. */
@@ -222,8 +218,16 @@ public class FilingService {
         }
     }
 
-    /** Bringt die Dateien eines Dokuments an den richtigen Ort. */
-    private void refile(Document document) {
+    /**
+     * Bringt die Dateien eines Dokuments an den richtigen Ort. Vorher bekommt es seinen Titel aus Absendername,
+     * Typ und Datum, das betrifft vor allem Dokumente aus der Zeit vor dieser Regel.
+     */
+    private void refile(Document found) {
+        Document document = found;
+        if (!documents.composeTitles(List.of(found.id()), properties.getTimeZone()).isEmpty()) {
+            reindexer.reindex(found.id());
+            document = documents.find(found.id()).orElse(found);
+        }
         String folder = folderOf(document);
         String stem = freeStem(document, folder, fileStem(document));
         List<Moved> moved = new ArrayList<>();

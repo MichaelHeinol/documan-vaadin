@@ -118,9 +118,9 @@ class CategoryTests extends IntegrationTest {
     @Test
     void theCategoryLevelsAreTheTopFolders() {
         finances();
-        assertThat(filing.folderOf(titled("Strom"))).isEqualTo("Finanzen/Energie/Bescheid");
-        assertThat(filing.folderOf(titled("Oktober"))).isEqualTo("Finanzen/Bank/Kontoauszug");
-        assertThat(filing.folderOf(titled("Lose"))).isEqualTo("Ohne Kategorie/Ohne Absendername/Ohne Dokumenttyp");
+        assertThat(filing.folderOf(titled("Strom"))).isEqualTo("Finanzen/Energie");
+        assertThat(filing.folderOf(titled("Oktober"))).isEqualTo("Finanzen/Bank");
+        assertThat(filing.folderOf(titled("Lose"))).isEqualTo("Ohne Kategorie");
     }
 
 

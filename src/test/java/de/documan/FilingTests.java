@@ -22,6 +22,7 @@ import de.documan.domain.Document;
 import de.documan.domain.DocumentStatus;
 import de.documan.domain.MasterItem;
 import de.documan.domain.MasterKind;
+import de.documan.service.DocumentService;
 import de.documan.service.FilingService;
 import de.documan.service.MediaStore;
 import de.documan.service.PipelineService;
@@ -31,6 +32,8 @@ class FilingTests extends IntegrationTest {
     @Autowired
     FilingService filing;
     @Autowired
+    DocumentService service;
+    @Autowired
     PipelineService pipeline;
     @Autowired
     MediaStore media;
@@ -38,7 +41,7 @@ class FilingTests extends IntegrationTest {
     PlatformTransactionManager transactions;
 
     private static final String MARCH = "2026-03-14";
-    private static final String UNSORTED = "Ohne Kategorie/Ohne Absendername/Ohne Dokumenttyp";
+    private static final String UNSORTED = "Ohne Kategorie";
 
     /** Dokument mit drei echten Dateien im alten Ordner, das auf den Umzug wartet. */
     private Document stored(String title, String name, boolean extra, boolean pending, DocumentStatus status,
@@ -138,7 +141,8 @@ class FilingTests extends IntegrationTest {
 
     @Test
     void aLongSenderGivesWayToTypeAndDate() {
-        String stem = filing.fileStem(document("ä".repeat(300)).date(MARCH).type(documentType("Rechnung")).create());
+        String stem = filing.fileStem(document("Strom").date(MARCH).correspondent(correspondent("ä".repeat(200)))
+                .type(documentType("Rechnung")).create());
         assertThat(stem.getBytes(StandardCharsets.UTF_8).length).isLessThanOrEqualTo(130);
         assertThat(stem).endsWith("ä_Rechnung_20260314");
     }
@@ -146,7 +150,13 @@ class FilingTests extends IntegrationTest {
     @Test
     void aLongTypeIsShortened() {
         Document document = document("Strom").date(MARCH).type(documentType("x".repeat(200))).create();
-        assertThat(filing.fileStem(document)).isEqualTo("Strom_" + "x".repeat(40) + "_20260314");
+        assertThat(filing.fileStem(document)).isEqualTo("x".repeat(40) + "_20260314");
+    }
+
+    @Test
+    void withoutCorrespondentTheTypeStandsAlone() {
+        Document document = document("Strom").date(MARCH).type(documentType("Rechnung")).create();
+        assertThat(filing.fileStem(document)).isEqualTo("Rechnung_20260314");
     }
 
     @Test
@@ -166,7 +176,7 @@ class FilingTests extends IntegrationTest {
     void folderFollowsTheCategorization() {
         Document document = document("Dokument").correspondent(correspondent("Telekom"))
                 .type(documentType("Rechnung")).create();
-        assertThat(filing.folderOf(document)).isEqualTo("Ohne Kategorie/Telekom/Rechnung");
+        assertThat(filing.folderOf(document)).isEqualTo("Ohne Kategorie");
     }
 
     @Test
@@ -178,7 +188,7 @@ class FilingTests extends IntegrationTest {
     void folderNamesCannotAddLevels() {
         Document document = document("Dokument").correspondent(correspondent("A/B: Müller"))
                 .type(documentType("..")).create();
-        assertThat(filing.folderOf(document)).isEqualTo("Ohne Kategorie/A B Müller/Ohne Dokumenttyp");
+        assertThat(filing.folderOf(document)).isEqualTo("Ohne Kategorie");
     }
 
     @Test
@@ -187,9 +197,9 @@ class FilingTests extends IntegrationTest {
                 documentType("Rechnung"));
         assertThat(filing.refileNext()).isTrue();
         Document moved = reload(document);
-        assertThat(moved.original()).isEqualTo("originals/Ohne Kategorie/Stadtwerke/Rechnung/Stadtwerke_Rechnung_20260314.pdf");
-        assertThat(moved.archive()).isEqualTo("archive/Ohne Kategorie/Stadtwerke/Rechnung/Stadtwerke_Rechnung_20260314.pdf");
-        assertThat(moved.thumbnail()).isEqualTo("thumbnails/Ohne Kategorie/Stadtwerke/Rechnung/Stadtwerke_Rechnung_20260314.jpg");
+        assertThat(moved.original()).isEqualTo("originals/Ohne Kategorie/Stadtwerke_Rechnung_20260314.pdf");
+        assertThat(moved.archive()).isEqualTo("archive/Ohne Kategorie/Stadtwerke_Rechnung_20260314.pdf");
+        assertThat(moved.thumbnail()).isEqualTo("thumbnails/Ohne Kategorie/Stadtwerke_Rechnung_20260314.jpg");
         assertThat(pending(moved)).isFalse();
         for (String file : List.of(moved.original(), moved.archive(), moved.thumbnail())) {
             assertThat(mediaRoot.resolve(file)).exists();
@@ -208,7 +218,7 @@ class FilingTests extends IntegrationTest {
     void oldEmptyFoldersDisappear() throws Exception {
         stored("Strom", "abcd");
         filing.refileNext();
-        assertThat(mediaRoot.resolve("originals/Ohne Kategorie/2026")).doesNotExist();
+        assertThat(mediaRoot.resolve("originals/2026")).doesNotExist();
         assertThat(mediaRoot.resolve("originals/" + UNSORTED)).exists();
     }
 
@@ -259,7 +269,7 @@ class FilingTests extends IntegrationTest {
         Document second = typed(stored("Rechnung", "zwei"), type);
         refileAll();
         assertThat(reload(second).original())
-                .isEqualTo("originals/Ohne Kategorie/Ohne Absendername/Mahnung/Rechnung_Mahnung_20260314_2.pdf");
+                .isEqualTo("originals/Ohne Kategorie/Mahnung_20260314_2.pdf");
     }
 
     @Test
@@ -285,13 +295,13 @@ class FilingTests extends IntegrationTest {
     }
 
     @Test
-    void anotherFolderNeedsNoIndex() throws Exception {
+    void anotherNameNeedsNoIndex() throws Exception {
         stored("Rechnung", "eins");
         typed(stored("Rechnung", "zwei"), documentType("Mahnung"));
         refileAll();
         assertThat(jdbc.sql("SELECT original FROM document").query(String.class).list())
                 .containsExactlyInAnyOrder("originals/" + UNSORTED + "/Rechnung_20260314.pdf",
-                        "originals/Ohne Kategorie/Ohne Absendername/Mahnung/Rechnung_Mahnung_20260314.pdf");
+                        "originals/Ohne Kategorie/Mahnung_20260314.pdf");
     }
 
     @Test
@@ -348,7 +358,7 @@ class FilingTests extends IntegrationTest {
     void failedMoveRestoresEveryFile() throws Exception {
         Document document = stored("Rechnung", "abcd");
         int[] calls = {0};
-        FilingService failing = new FilingService(properties, documents, media, master, transactions) {
+        FilingService failing = new FilingService(properties, documents, media, master, transactions, reindexer) {
             @Override
             protected void rename(Path source, Path destination) throws IOException {
                 if (++calls[0] == 2) {
@@ -394,8 +404,26 @@ class FilingTests extends IntegrationTest {
         assertThat(pipeline.processNext()).isTrue();
         assertThat(filing.refileNext()).isTrue();
         Document filed = reload(document);
-        assertThat(filed.original()).isEqualTo("originals/Ohne Kategorie/Stadtwerke/Ohne Dokumenttyp/Stadtwerke_20260314.pdf");
-        assertThat(filed.thumbnail()).isEqualTo("thumbnails/Ohne Kategorie/Stadtwerke/Ohne Dokumenttyp/Stadtwerke_20260314.jpg");
+        assertThat(filed.original()).isEqualTo("originals/Ohne Kategorie/Stadtwerke_20260314.pdf");
+        assertThat(filed.thumbnail()).isEqualTo("thumbnails/Ohne Kategorie/Stadtwerke_20260314.jpg");
         assertThat(mediaRoot.resolve(filed.original())).hasBinaryContent(pdf);
+    }
+
+    @Test
+    void savingComposesTheTitleFromTheNames() {
+        Document document = document("Scan").create();
+        LocalDate day = LocalDate.parse("2026-11-10");
+        service.update(document.id(), "Scan", "Radiologie Brühl", "Röntgenbild", day, "", "", List.of(), "");
+        assertThat(reload(document).title()).isEqualTo("Radiologie Brühl_Röntgenbild_20261110");
+
+        service.update(document.id(), "Radiologie Brühl_Röntgenbild_20261110", "", "Röntgenbild", day, "", "",
+                List.of(), "");
+        assertThat(reload(document).title()).isEqualTo("Röntgenbild_20261110");
+
+        // Ohne beide Namen wird ein so gebildeter Titel wieder zum Dateinamen, ein eigener bleibt.
+        service.update(document.id(), "Röntgenbild_20261110", "", "", day, "", "", List.of(), "");
+        assertThat(reload(document).title()).isEqualTo("x");
+        service.update(document.id(), "Eigener Titel", "", "", day, "", "", List.of(), "");
+        assertThat(reload(document).title()).isEqualTo("Eigener Titel");
     }
 }

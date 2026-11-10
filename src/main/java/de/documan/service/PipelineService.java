@@ -289,6 +289,7 @@ public class PipelineService {
             documents.markFailed(document.id(), "Unerwarteter Fehler: " + error.getMessage());
             log.error("#{} fehlgeschlagen", document.id(), error);
         }
+        documents.composeTitles(List.of(document.id()), properties.getTimeZone());
         reindexer.reindex(document.id());
         return true;
     }

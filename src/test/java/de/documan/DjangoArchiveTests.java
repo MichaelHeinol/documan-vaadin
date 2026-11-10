@@ -138,10 +138,10 @@ class DjangoArchiveTests extends IntegrationTest {
         while (filing.refileNext()) {
             // Alle Dokumente einmal durch die Ablage schicken.
         }
-        String umlauts = "originals/Ohne Kategorie/Stadtwerke Müller & Söhne/Ohne Dokumenttyp/Stadtwerke Müller & Söhne_20260314.pdf";
+        String umlauts = "originals/Ohne Kategorie/Stadtwerke Müller & Söhne_20260314.pdf";
         assertThat(allDocuments()).extracting(Document::original).containsExactly(umlauts,
-                "originals/Ohne Kategorie/Telekom/Rechnung/Telekom_Rechnung_20260502.pdf",
-                "originals/Ohne Kategorie/Ohne Absendername/Ohne Dokumenttyp/quittung_20261101.png");
+                "originals/Ohne Kategorie/Telekom_Rechnung_20260502.pdf",
+                "originals/Ohne Kategorie/quittung_20261101.png");
         assertThat(mediaRoot.resolve(umlauts)).exists();
     }
 

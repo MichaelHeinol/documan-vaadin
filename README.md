@@ -22,7 +22,7 @@ mit Vaadin gebaut: Seiten aktualisieren sich per Push, ohne neu zu laden.
   Sicherungen
 - **E-Mail-Benachrichtigungen:** Neue Benutzer erhalten ihre Zugangsdaten mit der Adresse des Systems
 - **Moderne Oberfläche** auf Deutsch, für Bildschirm und Handy, mit zehn Aussehen und Dunkelmodus
-- **Kein Datengefängnis:** Originale bleiben inhaltlich unverändert und liegen als normale Dateien auf dem NAS, sortiert nach Absendername und Dokumenttyp, benannt nach Absender, Dokumenttyp und Belegdatum
+- **Kein Datengefängnis:** Originale bleiben inhaltlich unverändert und liegen als normale Dateien auf dem NAS, sortiert nach Kategorie, benannt nach Absender, Dokumenttyp und Belegdatum
 
 ## Installation auf dem NAS
 
@@ -277,22 +277,25 @@ consume/                 Eingangsordner
 backup/                  Datensicherungen
 ```
 
-Alle drei Ordner sind gleich aufgebaut und folgen der Kategorisierung: erst die Stufen der Kategorie, darin
-der Dokumenttyp. Die Dateien heißen nach Absender, Dokumenttyp und Belegdatum, zum Beispiel
-`originals/Finanzen/Energie/Rechnung/Stadtwerke Musterstadt_Rechnung_20260314.pdf`. Der Absender steht damit im
-Dateinamen und bekommt keinen eigenen Ordner. Gibt es im selben
-Ordner mehrere Dateien mit diesem Namen, folgt ein Index wie `Stadtwerke Musterstadt_Rechnung_20260314_2.pdf`.
-Heruntergeladene Dateien heißen genauso.
+Alle drei Ordner sind gleich aufgebaut und bilden nur die Kategorie ab, eine Ordnerebene je Stufe. Die
+Dateien heißen wie der Titel nach Absendername, Dokumenttyp und Belegdatum, zum Beispiel
+`originals/Gesundheit/Radiologie/Radiologie Brühl_Röntgenbild_20261110.pdf`. Absendername und Dokumenttyp
+bekommen keine eigenen Ordner. Gibt es im selben Ordner mehrere Dateien mit diesem Namen, folgt ein Index wie
+`Radiologie Brühl_Röntgenbild_20261110_2.pdf`. Heruntergeladene Dateien heißen genauso.
 
-Ohne Kategorie liegt die Datei unter `Ohne Kategorie`, dort zusätzlich im Ordner des Absendernamens, etwa
-`originals/Ohne Kategorie/Stadtwerke Musterstadt/Rechnung/`. Fehlt der Absendername, heißt dieser Ordner
-`Ohne Absendername`, und im Dateinamen steht der Titel anstelle des Absenders. Ohne Dokumenttyp liegt sie unter `Ohne Dokumenttyp`, und der Typ entfällt im Namen. Ohne Belegdatum zählt das Importdatum.
-Tags bestimmen den Ordner nicht, weil ein Dokument mehrere haben kann.
+Ohne Kategorie liegt die Datei unter `Ohne Kategorie`. Fehlt der Absendername oder der Dokumenttyp, entfällt
+er im Namen. Fehlen beide, steht der Titel an ihrer Stelle. Ohne Belegdatum zählt das Importdatum. Tags
+bestimmen den Ordner nicht, weil ein Dokument mehrere haben kann.
+
+**Titel:** Sobald Absendername oder Dokumenttyp bekannt sind, bildet DocuMan den Titel selbst aus
+Absendername_Dokumenttyp_Datum, das Datum als JJJJMMTT, etwa `Radiologie Brühl_Röntgenbild_20261110`. Das
+Feld Titel ist dann gesperrt und ändert sich mit, wenn Sie Absendername, Dokumenttyp oder Dokumentdatum
+ändern. Ohne beide Namen behält ein Dokument den Titel aus Dateiname oder Betreff und lässt sich frei benennen.
 
 Ändern Sie Kategorie, Absendername, Dokumenttyp, Titel oder Datum oder benennen Sie eine Kategorie, einen
 Absendernamen oder Dokumenttyp um, zieht DocuMan die Dateien innerhalb weniger Sekunden nach. Leer gewordene
 Ordner verschwinden dabei. Nach dem Update auf diese
-Ablage ziehen vorhandene Dateien einmalig in die neuen Ordner. Während der Verarbeitung behalten neue
+Ablage ziehen vorhandene Dateien einmalig in die neuen Ordner und bekommen dabei ihren Titel nach dieser Regel. Während der Verarbeitung behalten neue
 Dateien vorübergehend ihren ursprünglichen Namen. Benennen Sie Dateien nicht von Hand um, die Datenbank
 merkt sich ihren Pfad.
 

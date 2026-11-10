@@ -1,11 +1,13 @@
 package de.documan.ui;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
@@ -49,6 +51,7 @@ import jakarta.annotation.security.PermitAll;
 public class DocumentView extends Div implements BeforeEnterObserver, HasDynamicTitle, Refreshable {
 
     private static final int MAX_TITLE_LENGTH = 300;
+    private static final DateTimeFormatter COMPACT_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final int MAX_ADDED_BY_LENGTH = 150;
 
     private final DocumentRepository documents;
@@ -224,6 +227,8 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         notes.setValue(document.notes());
         notes.setMinRows(3);
 
+        composeTitle();
+
         List<HasValue<?, ?>> fields = List.of(title, correspondent, documentType, category, date, tags, newTags,
                 addedBy, notes);
         fields.forEach(field -> field.addValueChangeListener(change -> {
@@ -243,6 +248,37 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         }
         return Ui.div("form-stack", field(title), Ui.div("form-row", field(correspondent), field(documentType)),
                 field(category), field(date), field(tags), field(newTags), field(addedBy), field(notes), actions);
+    }
+
+    /**
+     * Mit Absendername oder Dokumenttyp bildet sich der Titel selbst aus Absendername_Dokumenttyp_Datum, wie ihn
+     * der Server beim Speichern setzt. Ohne beide bleibt er frei wählbar.
+     */
+    private void composeTitle() {
+        String[] ownTitle = {title.getValue()};
+        title.setHelperText("Mit Absendername oder Dokumenttyp bildet sich der Titel selbst: "
+                + "Absendername_Dokumenttyp_Datum.");
+        Runnable compose = () -> {
+            List<String> names = Stream.of(text(correspondent), text(documentType))
+                    .filter(name -> !name.isEmpty()).toList();
+            title.setReadOnly(!names.isEmpty());
+            if (names.isEmpty()) {
+                title.setValue(ownTitle[0]);
+                return;
+            }
+            String day = date.getValue() != null ? date.getValue().format(COMPACT_DATE)
+                    : fmt.compactDate(document.added());
+            title.setValue(String.join("_", names) + "_" + day);
+        };
+        title.addValueChangeListener(change -> {
+            if (change.isFromClient()) {
+                ownTitle[0] = change.getValue();
+            }
+        });
+        correspondent.addValueChangeListener(change -> compose.run());
+        documentType.addValueChangeListener(change -> compose.run());
+        date.addValueChangeListener(change -> compose.run());
+        compose.run();
     }
 
     static Div field(Component input) {
