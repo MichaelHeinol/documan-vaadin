@@ -530,6 +530,9 @@ wenn der Web-Container neu startet.
 
 ## Entwicklung
 
+Das Datenmodell mit allen Tabellen und Beziehungen beschreibt `docs/datenmodell.md`, die Grafik liegt daneben als
+`docs/datenmodell.svg` und `docs/datenmodell.pdf`.
+
 Die Anwendung ist in Java 25 und Spring Boot 4 geschrieben und läuft in zwei Containern aus demselben
 Image: `web` liefert die Oberfläche, `worker` verarbeitet Warteschlange, Eingänge und Sicherungen.
 
