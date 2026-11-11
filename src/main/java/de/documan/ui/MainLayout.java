@@ -66,6 +66,7 @@ public class MainLayout extends Div implements RouterLayout, AfterNavigationObse
     private Anchor failedItem;
     private Span activeCount;
     private Span failedCount;
+    private Span rejectedCount;
     private Span backupFailed;
     private Component content;
     private Registration watching;
@@ -110,6 +111,7 @@ public class MainLayout extends Div implements RouterLayout, AfterNavigationObse
         inboxCount = Ui.span("nav-count", "0");
         activeCount = Ui.span("nav-count", "0");
         failedCount = Ui.span("nav-count danger", "0");
+        rejectedCount = Ui.span("nav-count danger", "0");
         Nav archive = group("Archiv", null,
                 item("home", "Übersicht", "", "", null),
                 item("file", "Alle Dokumente", "dokumente", "", totalCount),
@@ -117,7 +119,7 @@ public class MainLayout extends Div implements RouterLayout, AfterNavigationObse
                 item("inbox", "Eingang", "dokumente", "inbox", inboxCount));
         activeItem = item("clock", "In Verarbeitung", "dokumente", "active", activeCount);
         failedItem = item("alert", "Fehlgeschlagen", "dokumente", "failed", failedCount);
-        archive.add(activeItem, failedItem);
+        archive.add(activeItem, failedItem, item("upload", "Fehlerhafte Importe", "importe/fehlerhaft", "", rejectedCount));
 
         Nav master = group("Stammdaten", "Stammdaten",
                 item("category", "Kategorien", "stammdaten/kategorien", "", null),
@@ -300,6 +302,8 @@ public class MainLayout extends Div implements RouterLayout, AfterNavigationObse
         activeItem.setVisible(counts.active() > 0);
         failedCount.setText(String.valueOf(counts.failed()));
         failedItem.setVisible(counts.failed() > 0);
+        rejectedCount.setText(String.valueOf(counts.rejected()));
+        rejectedCount.setVisible(counts.rejected() > 0);
         if (backupFailed != null) {
             backupFailed.setVisible(backups.lastBackupFailed());
         }

@@ -26,6 +26,7 @@ import de.documan.domain.Document;
 import de.documan.domain.DocumentSource;
 import de.documan.domain.MailHeaders;
 import de.documan.repo.DocumentRepository;
+import de.documan.repo.ImportRejectionRepository;
 import de.documan.repo.MasterRepository;
 import de.documan.repo.DocumentRepository.NewDocument;
 
@@ -84,9 +85,11 @@ public class IngestService {
     private final MediaStore media;
     private final ProcessRunner processes;
     private final MasterRepository master;
+    private final ImportRejectionRepository rejections;
 
     public IngestService(DocuManProperties properties, DocumentRepository documents, Reindexer reindexer,
-            MediaStore media, ProcessRunner processes, MasterRepository master) {
+            MediaStore media, ProcessRunner processes, MasterRepository master, ImportRejectionRepository rejections) {
+        this.rejections = rejections;
         this.master = master;
         this.properties = properties;
         this.documents = documents;
@@ -154,6 +157,8 @@ public class IngestService {
      *
      * <p>Der Originalinhalt wird nie verändert. OCR und Vorschau entstehen als eigene Dateien,
      * das Original bleibt immer im Klartext auf dem Datenträger.
+     *
+     * <p>Abgelehnte Dateien merkt sich DocuMan mit Grund unter „Fehlerhafte Importe“, egal woher sie kamen.
      */
     public Document ingest(InputStreamSource source, String filename, DocumentSource origin, Options options)
             throws IngestException {
@@ -161,6 +166,11 @@ public class IngestService {
             return store(source, filename, origin, options);
         } catch (IOException error) {
             throw new UncheckedIOException(error);
+        } catch (IngestException rejected) {
+            Long existing = rejected instanceof DuplicateDocumentException duplicate ? duplicate.existing().id() : null;
+            rejections.record(origin, filename, rejected.getMessage(), options.addedBy(), options.sourceDetail(),
+                    existing);
+            throw rejected;
         }
     }
 

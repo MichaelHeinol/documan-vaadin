@@ -197,6 +197,8 @@ kbd {
   border-radius: 50%; background: var(--c, var(--accent));
 }
 .mono { font-family: var(--mono); font-size: 13px; }
+.strong { font-weight: 650; color: var(--ink); }
+.rejection-detail { display: block; margin-top: 2px; color: var(--ink-3); font-size: 13px; overflow-wrap: anywhere; }
 .muted { color: var(--ink-2); }
 .wrap { overflow-wrap: anywhere; }
 .visually-hidden {

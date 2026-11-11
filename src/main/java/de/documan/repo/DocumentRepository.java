@@ -414,12 +414,13 @@ public class DocumentRepository {
                     (SELECT concat_ws('-', count(*), max(id)) FROM correspondent),
                     (SELECT concat_ws('-', count(*), max(id)) FROM document_type),
                     (SELECT concat_ws('-', count(*), max(id)) FROM tag),
-                    (SELECT concat_ws('-', count(*), max(id)) FROM category))
+                    (SELECT concat_ws('-', count(*), max(id)) FROM category),
+                    (SELECT concat_ws('-', count(*), max(id)) FROM import_rejection))
                 """).query(String.class).single();
     }
 
     /** Für die Seitenleiste: alle Zähler mit einer Abfrage. */
-    public record NavigationCounts(long total, long inbox, long active, long failed) {
+    public record NavigationCounts(long total, long inbox, long active, long failed, long rejected) {
     }
 
     public NavigationCounts navigationCounts() {
@@ -427,11 +428,12 @@ public class DocumentRepository {
                 SELECT count(*) AS total,
                        count(*) FILTER (WHERE inbox AND status IN ('done', 'failed')) AS inbox,
                        count(*) FILTER (WHERE status IN ('pending', 'processing')) AS active,
-                       count(*) FILTER (WHERE status = 'failed') AS failed
+                       count(*) FILTER (WHERE status = 'failed') AS failed,
+                       (SELECT count(*) FROM import_rejection) AS rejected
                 FROM document
                 """)
                 .query((row, index) -> new NavigationCounts(row.getLong("total"), row.getLong("inbox"),
-                        row.getLong("active"), row.getLong("failed")))
+                        row.getLong("active"), row.getLong("failed"), row.getLong("rejected")))
                 .single();
     }
 

@@ -130,6 +130,12 @@ Beim Hochladen zeigt DocuMan zu jeder Datei, ob sie angenommen wurde. Abgelehnte
 oder nicht unterstützte Formate, bleiben mit ihrem Grund im Fenster stehen, bis Sie es schließen. Ein Link
 führt zum schon vorhandenen Dokument. Angenommene erscheinen sofort in Listen und Übersicht.
 
+**Fehlerhafte Importe:** Jede abgelehnte Datei, auch aus dem Eingangsordner und aus Postfächern, steht in
+der Seitenleiste unter „Fehlerhafte Importe“ mit Zeitpunkt, Herkunft und Grund. Bei Duplikaten führt ein Link
+zum vorhandenen Dokument. Einträge lassen sich einzeln oder alle entfernen, die Dateien selbst bleiben davon
+unberührt. Es bleiben die neuesten 500 Einträge. Dokumente, die angenommen wurden, deren Verarbeitung aber
+scheiterte, stehen weiter unter „Fehlgeschlagen“.
+
 DocuMan nimmt jeden Dateityp an und legt ihn unverändert ab. Nur PDFs und Bilder (PNG, JPEG, TIFF auch
 mehrseitig, WebP) bekommen zusätzlich eine durchsuchbare Archivfassung als PDF, das Original bleibt daneben
 erhalten. Andere Formate wandelt DocuMan nicht um. Aus Word, Excel, PowerPoint (auch die alten Formate .doc, .xls, .ppt),
