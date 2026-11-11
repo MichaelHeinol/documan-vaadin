@@ -259,8 +259,13 @@ Kategorie des Dokuments geht der seines Typs vor, ein leeres Feld nimmt sie wied
 nach oben. Die Dokumentliste filtert nach Kategorie, eine Kategorie umfasst dabei alle Unterkategorien. Die
 Suche findet Dokumente über jede Stufe ihrer Kategorie.
 
-**Ordner:** Die Ordneransicht zeigt alle Dokumente als Baum nach Kategorie mit ihren Unterkategorien, darin
-nach Dokumenttyp und Absendername.
+**Ordner:** Die Ordneransicht zeigt alle Dokumente als Baum. Oben wählen Sie die Gliederung:
+
+- **Kategorie:** die Stufen der Kategorie, darin die Dokumente, genau wie die Ablage auf dem NAS
+- **Typ / Absender:** erst der Dokumenttyp, darin der Absendername, über alle Kategorien hinweg
+- **Absender / Typ:** erst der Absendername, darin der Dokumenttyp
+
+Die Adresse merkt sich die Wahl, etwa `/ordner?nach=typ` oder `/ordner?nach=absender`.
 
 **Stapelbearbeitung:** In der Dokumentliste wählen Sie mehrere Dokumente aus und legen sie ab, setzen
 Absendername, Typ, Kategorie oder Tags, übernehmen fehlgeschlagene, verarbeiten sie erneut oder löschen sie.

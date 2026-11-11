@@ -10,9 +10,12 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Nav;
 import com.vaadin.flow.component.html.NativeDetails;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
@@ -21,18 +24,17 @@ import de.documan.domain.Document;
 import de.documan.domain.MasterItem;
 import de.documan.repo.DocumentRepository;
 import de.documan.service.Filters;
-import de.documan.service.Filters.CategoryNode;
-import de.documan.service.Filters.Folder;
 import de.documan.service.Filters.TreeNode;
+import de.documan.service.Filters.TreeOrder;
 import de.documan.service.QueryParams;
 import de.documan.web.Fmt;
 import jakarta.annotation.security.PermitAll;
 
-/** Alle Dokumente als Baum: Kategorie, Unterkategorien, Dokumenttyp, Absendername. */
+/** Alle Dokumente als Baum: nach Kategorie wie die Ablage, nach Dokumenttyp oder nach Absendername. */
 @Route(value = "ordner", layout = MainLayout.class)
 @PageTitle("Ordner · DocuMan")
 @PermitAll
-public class TreeView extends Div implements Refreshable {
+public class TreeView extends Div implements BeforeEnterObserver, Refreshable {
 
     private static final int FOLDER_LIMIT = 200;
     private static final String DATE_ORDER = "d.document_date DESC NULLS LAST, d.added DESC, d.id DESC";
@@ -43,14 +45,33 @@ public class TreeView extends Div implements Refreshable {
     private final DocumentRepository documents;
     private final Fmt fmt;
     private final Div tree = Ui.div("tree");
+    private final Paragraph label = new Paragraph();
+    private final Nav orders = new Nav();
+    private TreeOrder order = TreeOrder.CATEGORY;
 
     public TreeView(Filters filters, DocumentRepository documents, Fmt fmt) {
         this.filters = filters;
         this.documents = documents;
         this.fmt = fmt;
-        Header head = new Header(new Div(new H1("Ordner"), new Paragraph("Kategorie / Dokumenttyp / Absendername")));
+        orders.setClassName("segmented tree-orders");
+        orders.getElement().setAttribute("aria-label", "Gliederung");
+        Header head = new Header(new Div(new H1("Ordner"), label), orders);
         head.setClassName("page-head");
         add(head, tree);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        order = TreeOrder.of(event.getLocation().getQueryParameters().getSingleParameter("nach").orElse(""));
+        label.setText(order.label());
+        orders.removeAll();
+        for (TreeOrder choice : TreeOrder.values()) {
+            Anchor link = Ui.link("ordner?nach=" + choice.value(), choice.shortLabel());
+            if (choice == order) {
+                link.getElement().setAttribute("aria-current", "page");
+            }
+            orders.add(link);
+        }
         refresh();
     }
 
@@ -68,33 +89,28 @@ public class TreeView extends Div implements Refreshable {
     @Override
     public void refresh() {
         tree.removeAll();
-        List<CategoryNode> nodes = filters.tree();
+        List<TreeNode> nodes = filters.tree(order);
         if (nodes.isEmpty()) {
             tree.add(DocumentsView.emptyState("folder", "Noch keine Dokumente",
-                    "Sobald Dokumente da sind, erscheinen sie hier nach Kategorie, Typ und Absendername sortiert.", null));
+                    "Sobald Dokumente da sind, erscheinen sie hier nach Kategorie, Dokumenttyp oder Absendername sortiert.", null));
             return;
         }
-        nodes.forEach(node -> tree.add(category(node)));
+        nodes.forEach(node -> tree.add(node(node)));
     }
 
-    private NativeDetails category(CategoryNode node) {
+    /** Ein Ordner mit seinen Unterordnern. Eigene Dokumente lädt er erst beim Aufklappen. */
+    private NativeDetails node(TreeNode node) {
         Div children = Ui.div("tree-children");
-        node.children().forEach(child -> children.add(category(child)));
-        node.types().forEach(type -> children.add(type(type)));
-        return details("tree-category", node.key(), summary("category", node.name(), node.count()), children, null);
-    }
-
-    private NativeDetails type(TreeNode node) {
-        Div children = Ui.div("tree-children");
-        node.folders().forEach(folder -> children.add(folder(folder)));
-        return details("tree-type", node.key(), summary("folder", node.name(), node.count()), children, null);
-    }
-
-    private NativeDetails folder(Folder folder) {
-        Div content = Ui.div("");
-        content.add(Ui.paragraph("tree-note", "Wird geladen …"));
-        return details("tree-folder", folder.key(), summary(null, folder.name(), folder.count()), content,
-                () -> fill(content, folder.query()));
+        node.children().forEach(child -> children.add(node(child)));
+        Runnable load = null;
+        if (node.query() != null) {
+            Div content = Ui.div("");
+            content.add(Ui.paragraph("tree-note", "Wird geladen …"));
+            children.add(content);
+            load = () -> fill(content, node.query());
+        }
+        return details(node.category() ? "tree-category" : "tree-type", node.key(),
+                summary(node.category() ? "category" : "folder", node.name(), node.count()), children, load);
     }
 
     private static Component[] summary(String icon, String name, long count) {

@@ -132,14 +132,18 @@ class CategoryTests extends IntegrationTest {
     @Test
     void theTreeNestsTheLevels() {
         finances();
-        List<Filters.CategoryNode> tree = filters.tree();
+        List<Filters.TreeNode> tree = filters.tree();
         assertThat(tree).extracting(node -> node.name() + node.count())
                 .containsExactly("Finanzen3", "Ohne Kategorie2");
-        Filters.CategoryNode top = tree.getFirst();
+        Filters.TreeNode top = tree.getFirst();
         assertThat(top.children()).extracting(node -> node.name() + node.count())
                 .containsExactly("Bank1", "Energie1");
-        assertThat(top.types()).extracting(type -> type.name() + type.count()).containsExactly("Rechnung1");
-        assertThat(top.children().get(1).types()).extracting(Filters.TreeNode::name).containsExactly("Bescheid");
+        // Wie die Ablage: nur Kategoriestufen, Dokumenttyp und Absendername bekommen keine eigenen Ordner.
+        assertThat(top.query()).isNotNull();
+        assertThat(top.children()).allSatisfy(child -> {
+            assertThat(child.children()).isEmpty();
+            assertThat(child.category()).isTrue();
+        });
     }
 
 

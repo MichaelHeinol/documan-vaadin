@@ -1,13 +1,18 @@
 package de.documan.service;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriUtils;
@@ -61,15 +66,54 @@ public class Filters {
     public record Facet(String label, List<Option> options) {
     }
 
-    public record Folder(String name, long count, String key, String query) {
+    /** Wonach die Ordneransicht gliedert. Der Wert steht in der Adresse, etwa /ordner?nach=typ. */
+    public enum TreeOrder {
+        CATEGORY("kategorie", "Kategorie", "Kategorie"),
+        TYPE("typ", "Dokumenttyp / Absendername", "Typ / Absender"),
+        CORRESPONDENT("absender", "Absendername / Dokumenttyp", "Absender / Typ");
+
+        private final String value;
+        private final String label;
+        private final String shortLabel;
+
+        TreeOrder(String value, String label, String shortLabel) {
+            this.value = value;
+            this.label = label;
+            this.shortLabel = shortLabel;
+        }
+
+        /** Für die Umschalter, auch auf dem Handy. */
+        public String shortLabel() {
+            return shortLabel;
+        }
+
+        public String value() {
+            return value;
+        }
+
+        public String label() {
+            return label;
+        }
+
+        /** Unbekannte oder fehlende Werte ergeben die Ansicht nach Kategorie. */
+        public static TreeOrder of(String value) {
+            for (TreeOrder order : values()) {
+                if (order.value.equals(value)) {
+                    return order;
+                }
+            }
+            return CATEGORY;
+        }
     }
 
-    /** Eine Kategoriestufe der Ordneransicht mit Unterkategorien und den Dokumenttypen dieser Stufe. */
-    public record CategoryNode(String name, long count, String key, List<CategoryNode> children,
-            List<TreeNode> types) {
-    }
-
-    public record TreeNode(String name, long count, String key, List<Folder> folders) {
+    /**
+     * Ein Ordner der Ordneransicht. Hat er eigene Dokumente, lädt die Oberfläche sie beim Aufklappen über
+     * query nach, sonst ist query null.
+     *
+     * @param category ob der Ordner eine Kategoriestufe ist, die Oberfläche zeigt dann ein anderes Symbol
+     */
+    public record TreeNode(String name, long count, String key, boolean category, List<TreeNode> children,
+            String query) {
     }
 
     private final DocumentRepository documents;
@@ -212,67 +256,116 @@ public class Filters {
         return options;
     }
 
-    /** Ordnerbaum Kategorie → Unterkategorien → Dokumenttyp → Absendername. Eine Abfrage für alle Ordner. */
-    public List<CategoryNode> tree() {
+    /** Ordnerbaum nach Kategorie, wie die Ablage auf dem NAS. Eine Abfrage für alle Ordner. */
+    public List<TreeNode> tree() {
+        return tree(TreeOrder.CATEGORY);
+    }
+
+    /**
+     * Ordnerbaum in der gewählten Gliederung. Nach Kategorie folgen die Stufen der Kategorie, jede mit ihren
+     * eigenen Dokumenten. Die beiden anderen Gliederungen fassen Dokumenttyp und Absendername über alle
+     * Kategorien zusammen.
+     */
+    public List<TreeNode> tree(TreeOrder order) {
+        List<TreeRow> rows = documents.treeRows();
+        return switch (order) {
+            case CATEGORY -> categoryTree(rows);
+            case TYPE -> nameTree(rows, order, TreeRow::typeId, TreeRow::typeName, "Ohne Dokumenttyp", "type",
+                    TreeRow::correspondentId, TreeRow::correspondentName, "Ohne Absendername", "correspondent");
+            case CORRESPONDENT -> nameTree(rows, order, TreeRow::correspondentId, TreeRow::correspondentName,
+                    "Ohne Absendername", "correspondent", TreeRow::typeId, TreeRow::typeName, "Ohne Dokumenttyp",
+                    "type");
+        };
+    }
+
+    private List<TreeNode> categoryTree(List<TreeRow> rows) {
         CategoryPaths paths = new CategoryPaths(master.categories());
-        Map<Long, List<TreeRow>> byCategory = new LinkedHashMap<>();
-        for (TreeRow row : documents.treeRows()) {
-            Long category = paths.contains(row.categoryId()) ? row.categoryId() : null;
-            byCategory.computeIfAbsent(category, key -> new ArrayList<>()).add(row);
+        Map<Long, Long> own = new HashMap<>();
+        long loose = 0;
+        for (TreeRow row : rows) {
+            if (paths.contains(row.categoryId())) {
+                own.merge(row.categoryId(), row.count(), Long::sum);
+            } else {
+                loose += row.count();
+            }
         }
-        List<CategoryNode> tree = new ArrayList<>();
+        List<TreeNode> tree = new ArrayList<>();
         for (long root : paths.roots()) {
-            CategoryNode node = categoryNode(root, paths, byCategory);
+            TreeNode node = categoryNode(root, paths, own);
             if (node.count() > 0) {
                 tree.add(node);
             }
         }
-        List<TreeRow> loose = byCategory.getOrDefault(null, List.of());
-        if (!loose.isEmpty()) {
-            String key = "category-" + NONE;
-            List<TreeNode> types = typeNodes(loose, key, NONE);
-            tree.add(new CategoryNode(NO_CATEGORY, types.stream().mapToLong(TreeNode::count).sum(), key, List.of(),
-                    types));
+        if (loose > 0) {
+            tree.add(new TreeNode(NO_CATEGORY, loose, prefix(TreeOrder.CATEGORY) + NONE, true, List.of(),
+                    CATEGORY_ONLY + "=" + NONE));
         }
         return tree;
     }
 
-    private CategoryNode categoryNode(long id, CategoryPaths paths, Map<Long, List<TreeRow>> byCategory) {
-        String key = "category-" + id;
-        List<CategoryNode> children = new ArrayList<>();
+    private TreeNode categoryNode(long id, CategoryPaths paths, Map<Long, Long> own) {
+        List<TreeNode> children = new ArrayList<>();
         for (long child : paths.children(id)) {
-            CategoryNode node = categoryNode(child, paths, byCategory);
+            TreeNode node = categoryNode(child, paths, own);
             if (node.count() > 0) {
                 children.add(node);
             }
         }
-        List<TreeNode> types = typeNodes(byCategory.getOrDefault(id, List.of()), key, String.valueOf(id));
-        long count = children.stream().mapToLong(CategoryNode::count).sum()
-                + types.stream().mapToLong(TreeNode::count).sum();
-        return new CategoryNode(paths.name(id), count, key, children, types);
+        long documentsHere = own.getOrDefault(id, 0L);
+        long count = documentsHere + children.stream().mapToLong(TreeNode::count).sum();
+        return new TreeNode(paths.name(id), count, prefix(TreeOrder.CATEGORY) + id, true, children,
+                documentsHere > 0 ? CATEGORY_ONLY + "=" + id : null);
     }
 
-    /** Die Zeilen einer Kategoriestufe, nach Typ und Absendername sortiert. */
-    private static List<TreeNode> typeNodes(List<TreeRow> rows, String categoryKey, String categoryValue) {
-        Map<String, List<TreeRow>> byType = new LinkedHashMap<>();
+    private static String prefix(TreeOrder order) {
+        return order.value() + "/";
+    }
+
+    /** Zwei Ebenen aus Stammdaten, etwa Dokumenttyp und darunter Absendername. Fehlende Namen stehen zuletzt. */
+    private static List<TreeNode> nameTree(List<TreeRow> rows, TreeOrder order,
+            Function<TreeRow, Long> outerId, Function<TreeRow, String> outerName, String outerMissing, String outerFilter,
+            Function<TreeRow, Long> innerId, Function<TreeRow, String> innerName, String innerMissing,
+            String innerFilter) {
+        Map<String, String> outerNames = new HashMap<>();
+        Map<String, Map<String, Long>> counts = new HashMap<>();
+        Map<String, String> innerNames = new HashMap<>();
         for (TreeRow row : rows) {
-            byType.computeIfAbsent(row.typeId() == null ? NONE : row.typeId().toString(), key -> new ArrayList<>())
-                    .add(row);
+            String outer = key(outerId.apply(row));
+            String inner = key(innerId.apply(row));
+            outerNames.putIfAbsent(outer, name(outerName.apply(row), outerMissing));
+            innerNames.putIfAbsent(inner, name(innerName.apply(row), innerMissing));
+            counts.computeIfAbsent(outer, ignored -> new HashMap<>()).merge(inner, row.count(), Long::sum);
         }
-        List<TreeNode> types = new ArrayList<>();
-        byType.forEach((typeKey, typeRows) -> {
-            List<Folder> folders = new ArrayList<>();
-            for (TreeRow row : typeRows) {
-                String correspondent = row.correspondentId() == null ? NONE : row.correspondentId().toString();
-                String name = row.correspondentName() == null ? "Ohne Absendername" : row.correspondentName();
-                folders.add(new Folder(name, row.count(), categoryKey + "/" + typeKey + "/" + correspondent,
-                        CATEGORY_ONLY + "=" + categoryValue + "&type=" + typeKey + "&correspondent=" + correspondent));
+        List<TreeNode> tree = new ArrayList<>();
+        for (String outer : sorted(outerNames)) {
+            List<TreeNode> children = new ArrayList<>();
+            Map<String, Long> inner = counts.get(outer);
+            for (String key : sorted(innerNames.entrySet().stream().filter(entry -> inner.containsKey(entry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))) {
+                children.add(new TreeNode(innerNames.get(key), inner.get(key), prefix(order) + outer + "/" + key, false,
+                        List.of(), outerFilter + "=" + outer + "&" + innerFilter + "=" + key));
             }
-            String typeName = typeRows.getFirst().typeName();
-            types.add(new TreeNode(typeName == null ? "Ohne Dokumenttyp" : typeName,
-                    folders.stream().mapToLong(Folder::count).sum(), categoryKey + "/" + typeKey, folders));
-        });
-        return types;
+            tree.add(new TreeNode(outerNames.get(outer), children.stream().mapToLong(TreeNode::count).sum(),
+                    prefix(order) + outer, false, children, null));
+        }
+        return tree;
+    }
+
+    private static String key(Long id) {
+        return id == null ? NONE : id.toString();
+    }
+
+    private static String name(String name, String missing) {
+        return name == null ? missing : name;
+    }
+
+    /** Nach Namen in deutscher Sortierung, Ä bei A, ohne Groß- und Kleinschreibung. „Ohne …“ steht zuletzt. */
+    private static List<String> sorted(Map<String, String> names) {
+        Collator german = Collator.getInstance(Locale.GERMAN);
+        german.setStrength(Collator.SECONDARY);
+        return names.keySet().stream()
+                .sorted(Comparator.comparing((String key) -> key.equals(NONE)).thenComparing(names::get, german))
+                .toList();
     }
 
     private static Option option(QueryParams params, String name, String value, String label, long count,

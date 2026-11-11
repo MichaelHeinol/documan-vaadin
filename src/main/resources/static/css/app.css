@@ -304,6 +304,7 @@ input, select, textarea {
   border-radius: var(--radius-3); background: var(--surface); color: var(--ink); font: inherit;
 }
 textarea { resize: vertical; }
+input[readonly] { background: var(--surface-2); color: var(--ink-2); }
 input[type="checkbox"] {
   width: 18px; height: 18px; min-height: 0; padding: 0; flex: none; accent-color: var(--accent);
 }
@@ -439,6 +440,12 @@ table.compact td, table.compact th { padding: 5px 4px; }
 }
 .segmented .icon { width: 15px; height: 15px; }
 .segmented button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); }
+.segmented a {
+  display: flex; align-items: center; height: 30px; padding: 0 11px; border-radius: 5px; color: var(--ink-3);
+  font-size: 13.5px; font-weight: 550; white-space: nowrap;
+}
+.segmented a:hover { color: var(--ink); }
+.segmented a[aria-current="page"] { background: var(--surface-2); color: var(--ink); }
 
 .active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .chip {
@@ -667,10 +674,11 @@ a.welcome-step:hover, button.welcome-step:hover { border-color: var(--accent); c
 
 /* Ordner */
 .tree { display: grid; gap: 8px; }
-.tree-category { border: 1px solid var(--line); border-radius: var(--radius-2); background: var(--surface); box-shadow: var(--shadow-1); overflow: hidden; }
+.tree-orders { flex-wrap: wrap; }
+.tree > details { border: 1px solid var(--line); border-radius: var(--radius-2); background: var(--surface); box-shadow: var(--shadow-1); overflow: hidden; }
+.tree > details > summary { font-weight: 650; }
 .tree-category > summary { font-weight: 650; }
 .tree-category > summary .icon:not(.chevron) { color: var(--accent); }
-.tree-children .tree-category { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .tree-children .tree-category > summary { font-weight: 600; }
 .tree summary {
   display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 8px 14px; list-style: none; cursor: pointer;

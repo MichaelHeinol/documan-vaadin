@@ -169,22 +169,39 @@ class ViewTests extends IntegrationTest {
         document("Ohne Absender").type(contract).create();
         document("Lose").correspondent(town).create();
         document("Ganz lose").create();
-        // Ohne Oberkategorien liegt alles unter „Ohne Oberkategorie“.
-        return filters.tree().getFirst().types();
+        return filters.tree(Filters.TreeOrder.TYPE);
     }
 
     private MvcResult folder(Filters.TreeNode node, int position) throws Exception {
-        return page("/ordner/inhalt?" + node.folders().get(position).query());
+        return page("/ordner/inhalt?" + node.children().get(position).query());
     }
 
     @Test
     void typesContainCorrespondentsWithCounts() {
         List<String> summary = treeOfSixDocuments().stream()
-                .map(node -> node.name() + node.count() + node.folders().stream()
+                .map(node -> node.name() + node.count() + node.children().stream()
                         .map(folder -> folder.name() + folder.count()).toList())
                 .toList();
         assertThat(summary).containsExactly("Bescheid1[Ohne Absendername1]",
                 "Rechnung3[Ärztekammer1, Stadtwerke2]", "Ohne Dokumenttyp2[Stadtwerke1, Ohne Absendername1]");
+    }
+
+    @Test
+    void correspondentsContainTypesWithCounts() {
+        treeOfSixDocuments();
+        List<String> summary = filters.tree(Filters.TreeOrder.CORRESPONDENT).stream()
+                .map(node -> node.name() + node.count() + node.children().stream()
+                        .map(folder -> folder.name() + folder.count()).toList())
+                .toList();
+        assertThat(summary).containsExactly("Ärztekammer1[Rechnung1]", "Stadtwerke3[Rechnung2, Ohne Dokumenttyp1]",
+                "Ohne Absendername2[Bescheid1, Ohne Dokumenttyp1]");
+    }
+
+    @Test
+    void withoutCategoriesEverythingLiesInOneFolder() {
+        treeOfSixDocuments();
+        assertThat(filters.tree()).extracting(node -> node.name() + node.count() + node.children().size())
+                .containsExactly("Ohne Kategorie60");
     }
 
 
