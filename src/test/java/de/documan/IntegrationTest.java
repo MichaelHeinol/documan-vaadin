@@ -64,6 +64,8 @@ public abstract class IntegrationTest {
     @Autowired
     protected Reindexer reindexer;
     @Autowired
+    protected de.documan.service.ai.AiAssignmentService aiAssignment;
+    @Autowired
     protected IngestService ingest;
 
     protected Path mediaRoot;
@@ -80,12 +82,18 @@ public abstract class IntegrationTest {
         properties.setBackupDir(backupRoot);
         properties.setMaxFileMb(500);
         properties.setSecretKey("nur-fuer-tests");
+        // Die KI-Zuordnung würde sonst aus den Testdokumenten lernen. Ihre eigenen Tests schalten sie ein.
+        properties.setAiLearning(false);
+        properties.setOllamaUrl("");
+        aiAssignment.forget();
         created = 0;
         jdbc.sql("""
                 TRUNCATE app_user, correspondent, category, document_type, tag, document, document_tag,
                          mail_account, mail_account_tag, processed_mail, backup_settings, backup_run, activity,
-                         consume_folder, storage_usage, daily_report RESTART IDENTITY CASCADE
+                         consume_folder, storage_usage, daily_report, import_rejection RESTART IDENTITY CASCADE
                 """).update();
+        jdbc.sql("UPDATE ai_status SET learned_at = NULL, learned_documents = 0, model_ok_at = NULL, model_error = '', "
+                + "model_error_at = NULL, assigned = 0").update();
         // So steht es nach der Einrichtung in der Datenbank.
         jdbc.sql("INSERT INTO consume_folder (folder) VALUES ('eingang')").update();
     }

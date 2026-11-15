@@ -16,7 +16,8 @@ mit Vaadin gebaut: Seiten aktualisieren sich per Push, ohne neu zu laden.
 - **Ausschlussregeln und Spam-Schutz** je Postfach
 - **IMAP-Import** von PDF- und Bildanhängen, Absender, Empfänger, Betreff und Datum bleiben am Dokument
 - **Eingespielt von:** Jedes Dokument merkt sich, woher es kam, die Übersicht zeigt das als 3D-Tortengrafik
-- **Automatische Zuordnung** von Absendername, Typ, Tags und Dokumentdatum
+- **Automatische Zuordnung** von Absendername, Typ, Tags und Dokumentdatum über Regeln
+- **KI-Zuordnung**, die aus den eigenen Dokumenten lernt, optional mit einem lokalen Sprachmodell über Ollama
 - **Datensicherung** als ZIP per Knopfdruck oder Zeitplan, Wiederherstellung auch nach einer Neuinstallation
 - **Umzug** aus der eingestellten Django-Version, nur für Admins. Mit der Java-Version teilt diese Fassung Datenbank und
   Sicherungen
@@ -292,6 +293,43 @@ Absendernamen und Typen werden nur vorgeschlagen, wenn das Feld noch leer ist.
 | `strom oder gas` | einer der Begriffe |
 
 Die Taste `/` springt in die Suche. In der Dokumentliste aktualisieren sich die Treffer beim Tippen.
+
+## KI-Zuordnung
+
+Nach der Verarbeitung füllt die KI-Zuordnung leere Felder eines neuen Dokuments: Absendername, Dokumenttyp,
+Kategorie, Tags und Dokumentdatum. Die Regeln der Stammdaten gehen vor, gesetzte Werte überschreibt sie nie.
+Alles läuft im eigenen Netz, kein Dokument geht an einen fremden Dienst.
+
+**Lernende Zuordnung:** DocuMan lernt aus den Dokumenten, die Sie schon zugeordnet haben. Ein neues Dokument
+bekommt Absendername, Dokumenttyp, Kategorie und Tags seiner ähnlichsten Vorgänger, wenn diese
+übereinstimmen. Ganz neue Absender bleiben leer, statt dem nächstbesten zugeschlagen zu werden. Das braucht
+keinen zusätzlichen Dienst, kaum Arbeitsspeicher und nur Sekundenbruchteile. Je mehr Dokumente zugeordnet
+sind, desto besser wird es. Abschalten lässt es sich mit `AI_LEARNING=false` in der `.env`.
+
+**Sprachmodell (optional):** Mit einem Ollama-Server liest zusätzlich ein Sprachmodell die Dokumente, bei
+denen noch etwas fehlt. Es erkennt auch neue Absendernamen und das Belegdatum. Dokumenttyp, Kategorie und
+Tags wählt es nur aus den vorhandenen. Eingerichtet wird es in der `.env`:
+
+```
+OLLAMA_URL=http://ollama:11434
+OLLAMA_MODEL=qwen2.5:3b
+```
+
+| Ollama läuft | Vorteil | Nachteil |
+|---|---|---|
+| auf dem NAS (Dienst `ollama` in `nas-paket/compose.yaml` einkommentieren, Ordner `data/ollama` anlegen) | immer verfügbar | ohne Grafikkarte oft über eine Minute je Dokument, 3 bis 6 GB Arbeitsspeicher |
+| auf einem PC im Heimnetz, etwa `OLLAMA_URL=http://192.168.178.20:11434` | wenige Sekunden je Dokument | nur, solange der PC läuft |
+
+Das Modell lädt DocuMan beim ersten Aufruf selbst herunter. Das Sprachmodell kommt im Worker immer zuletzt,
+neue Dokumente warten nicht darauf. Ist Ollama nicht erreichbar, versucht DocuMan es nach fünf Minuten
+erneut, die Dokumente bleiben so lange vorgemerkt. Auf einem PC muss Ollama Verbindungen aus dem Netz annehmen
+(`OLLAMA_HOST=0.0.0.0`).
+
+**Markierung und Bestätigung:** Was die KI gesetzt hat, ist am Dokument mit **KI** markiert. Speichern Sie
+das Dokument oder legen Sie es ab, gelten die Angaben als bestätigt. Erst dann lernt DocuMan daraus, so
+bestätigen sich Fehler nicht selbst. Haben Sie ein Dokument gespeichert, bevor das Sprachmodell dran war,
+ändert es nichts mehr daran. Die Übersicht zeigt Administratoren den Stand: aus wie vielen Dokumenten gelernt
+wurde, ob das Sprachmodell erreichbar ist und wie viele Angaben die KI bisher gesetzt hat.
 
 ## Dateien auf dem NAS
 

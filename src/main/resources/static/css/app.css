@@ -199,6 +199,12 @@ kbd {
 .mono { font-family: var(--mono); font-size: 13px; }
 .strong { font-weight: 650; color: var(--ink); }
 .rejection-detail { display: block; margin-top: 2px; color: var(--ink-3); font-size: 13px; overflow-wrap: anywhere; }
+.ai-status { display: grid; gap: 8px; }
+.ai-status p { margin: 0; }
+.ai-badge {
+  display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--accent-soft);
+  color: var(--accent); font-size: 11px; font-weight: 700; line-height: 17px; vertical-align: middle;
+}
 .muted { color: var(--ink-2); }
 .wrap { overflow-wrap: anywhere; }
 .visually-hidden {

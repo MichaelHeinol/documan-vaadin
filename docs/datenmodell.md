@@ -1,13 +1,13 @@
 # Datenmodell
 
 Die Datenbank ist in der Java- und der Vaadin-Version identisch, beide spielen dieselben Flyway-Migrationen ein
-(Stand: V22). Die Grafik gibt es als [SVG](datenmodell.svg) und [PDF](datenmodell.pdf). Das Diagramm unten zeigt
+(Stand: V23). Die Grafik gibt es als [SVG](datenmodell.svg) und [PDF](datenmodell.pdf). Das Diagramm unten zeigt
 GitHub direkt an.
 
 | Bereich | Tabelle | Inhalt |
 |---|---|---|
-| Dokumente | `document` | Ein Dokument mit Original, Archivfassung, Vorschau, Text, Zuordnung und E-Mail-Angaben |
-| Dokumente | `document_tag` | Tags eines Dokuments (n:m) |
+| Dokumente | `document` | Ein Dokument mit Original, Archivfassung, Vorschau, Text, Zuordnung und E-Mail-Angaben. `ai_fields` nennt die Felder, die die KI gesetzt hat, `ai_pending` merkt es für das Sprachmodell vor |
+| Dokumente | `document_tag` | Tags eines Dokuments (n:m), `by_ai` markiert Tags der KI |
 | Dokumente | `import_rejection` | Abgelehnte Importe mit Grund, bei Duplikaten mit Verweis auf das vorhandene Dokument |
 | Stammdaten | `category` | Kategorien in bis zu zehn Stufen, `parent_id` zeigt auf die Stufe darüber |
 | Stammdaten | `correspondent` | Absendernamen mit Regel für die automatische Zuordnung |
@@ -25,6 +25,7 @@ GitHub direkt an.
 | Betrieb | `backup_run` | Aufträge für Sicherung, Wiederherstellung und Umzug mit Fortschritt |
 | Betrieb | `consume_folder` | Weitere Eingangsordner |
 | Betrieb | `storage_usage` | Zuletzt gemessener Speicherbedarf (eine Zeile) |
+| Betrieb | `ai_status` | Zustand der KI-Zuordnung für die Übersicht (eine Zeile) |
 
 Löschregeln: Gelöschte Stammdaten lassen die Dokumente stehen, der Verweis wird leer (`SET NULL`). Mit einem
 Dokument oder Postfach verschwinden seine Tag-Zuordnungen, Ausschlussregeln und verarbeiteten Nachrichten
@@ -39,6 +40,15 @@ erDiagram
         varchar_10 kind
         int count
         timestamptz at
+    }
+    ai_status {
+        smallint id PK
+        timestamptz learned_at
+        int learned_documents
+        timestamptz model_ok_at
+        text model_error
+        timestamptz model_error_at
+        int assigned
     }
     app_user {
         bigint id PK
@@ -149,10 +159,13 @@ erDiagram
         timestamptz mail_date
         varchar_500 mail_message_id
         bigint category_id FK
+        varchar_100 ai_fields
+        boolean ai_pending
     }
     document_tag {
         bigint document_id PK,FK
         bigint tag_id PK,FK
+        boolean by_ai
     }
     document_type {
         bigint id PK

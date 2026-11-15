@@ -238,7 +238,7 @@ class PipelineTests extends IntegrationTest {
     void editDuringProcessingSurvives() throws Exception {
         Document document = add(Samples.textPdf("Rechnung mit ausreichend viel Inhalt"));
         PipelineService editing = new PipelineService(properties, documents, masterRepository, reindexer, media,
-                processes) {
+                processes, aiAssignment) {
             @Override
             protected Processed processDocument(Document claimed) {
                 documents.updateMetadata(claimed.id(), "Während OCR geändert", null, null, null, "", "");

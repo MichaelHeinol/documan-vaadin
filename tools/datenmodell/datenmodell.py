@@ -50,7 +50,7 @@ AREAS = OrderedDict([
     ("Stammdaten", (["category", "correspondent", "document_type", "tag"], "#dcfce7", "#15803d")),
     ("E-Mail", (["mail_account", "mail_account_tag", "mail_exclusion_rule", "processed_mail"], "#fef3c7", "#b45309")),
     ("Benutzer und Betrieb", (["app_user", "activity", "daily_report", "daily_report_excluded", "backup_settings",
-                               "backup_run", "consume_folder", "storage_usage"], "#f3e8ff", "#7e22ce")),
+                               "backup_run", "consume_folder", "storage_usage", "ai_status"], "#f3e8ff", "#7e22ce")),
 ])
 
 DESCRIPTIONS = {
@@ -73,6 +73,7 @@ DESCRIPTIONS = {
     "backup_run": "Aufträge für Sicherung, Wiederherstellung und Umzug mit Fortschritt",
     "consume_folder": "Weitere Eingangsordner",
     "storage_usage": "Zuletzt gemessener Speicherbedarf (eine Zeile)",
+    "ai_status": "Zustand der KI-Zuordnung für die Übersicht (eine Zeile)",
 }
 
 TYPES = {
@@ -140,7 +141,7 @@ for table, column, target, _, rule in foreign:
 
 # --- Graphviz ----------------------------------------------------------------------------------
 dot = ['digraph documan {', '  graph [rankdir=LR, fontname="DejaVu Sans", fontsize=11, nodesep=0.35, ranksep=1.0, '
-       'pad=0.3, bgcolor="white", label="DocuMan – Datenmodell (Java und Vaadin, Migration V22)", '
+       'pad=0.3, bgcolor="white", label="DocuMan – Datenmodell (Java und Vaadin, Migration V23)", '
        'labelloc=t, fontsize=16];',
        '  node [shape=plain, fontname="DejaVu Sans", fontsize=10];',
        '  edge [fontname="DejaVu Sans", fontsize=8, color="#64748b", arrowhead=crow, arrowtail=none, dir=both];']
@@ -164,7 +165,7 @@ for table, column, target, target_column, rule in foreign:
     style = "dashed" if rule == "SET NULL" else "solid"
     dot.append(f'  {target}:{target_column} -> {table}:{column} [style={style}];')
 # Tabellen ohne Beziehungen in Reihen nebeneinander statt in einer langen Spalte.
-for row in (["activity", "daily_report", "backup_settings"], ["backup_run", "consume_folder", "storage_usage"]):
+for row in (["activity", "daily_report", "backup_settings", "ai_status"], ["backup_run", "consume_folder", "storage_usage"]):
     for left, right in zip(row, row[1:]):
         dot.append(f"  {left} -> {right} [style=invis];")
 dot.append('  legende [label=<<table border="0" cellborder="0" cellspacing="2" cellpadding="3">'

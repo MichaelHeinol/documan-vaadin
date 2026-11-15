@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import com.vaadin.flow.component.Component;
@@ -24,6 +25,7 @@ import com.vaadin.flow.component.html.IFrame;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.html.Section;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -37,6 +39,7 @@ import de.documan.domain.Document;
 import de.documan.domain.MasterItem;
 import de.documan.domain.MasterKind;
 import de.documan.repo.ActivityRepository;
+import de.documan.repo.AiRepository;
 import de.documan.repo.DocumentRepository;
 import de.documan.repo.MasterRepository;
 import de.documan.service.CategoryPaths;
@@ -74,9 +77,11 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
     private TextField newTags;
     private ComboBox<String> addedBy;
     private TextArea notes;
+    private final AiRepository ai;
 
     public DocumentView(DocumentRepository documents, DocumentService service, MasterRepository master,
-            Filters filters, ActivityRepository activities, Fmt fmt) {
+            Filters filters, ActivityRepository activities, Fmt fmt, AiRepository ai) {
+        this.ai = ai;
         this.documents = documents;
         this.service = service;
         this.master = master;
@@ -228,6 +233,7 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         notes.setMinRows(3);
 
         composeTitle();
+        Div aiNote = markAiFields();
 
         List<HasValue<?, ?>> fields = List.of(title, correspondent, documentType, category, date, tags, newTags,
                 addedBy, notes);
@@ -246,8 +252,12 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         } else {
             actions.add(Ui.primary("Speichern", () -> save("")));
         }
-        return Ui.div("form-stack", field(title), Ui.div("form-row", field(correspondent), field(documentType)),
+        Div form = Ui.div("form-stack", field(title), Ui.div("form-row", field(correspondent), field(documentType)),
                 field(category), field(date), field(tags), field(newTags), field(addedBy), field(notes), actions);
+        if (aiNote != null) {
+            form.addComponentAsFirst(aiNote);
+        }
+        return form;
     }
 
     /**
@@ -279,6 +289,45 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         documentType.addValueChangeListener(change -> compose.run());
         date.addValueChangeListener(change -> compose.run());
         compose.run();
+    }
+
+    /**
+     * Markiert, was die KI-Zuordnung gesetzt hat, und gibt den Hinweis dazu zurück. Mit dem Speichern gilt
+     * alles als bestätigt.
+     */
+    private Div markAiFields() {
+        Set<String> fields = ai.aiFields(document.id());
+        Set<Long> tagIds = ai.aiTagIds(document.id());
+        if (fields.contains(AiRepository.CORRESPONDENT)) {
+            correspondent.setPrefixComponent(aiBadge());
+        }
+        if (fields.contains(AiRepository.TYPE)) {
+            documentType.setPrefixComponent(aiBadge());
+        }
+        if (fields.contains(AiRepository.CATEGORY)) {
+            category.setPrefixComponent(aiBadge());
+        }
+        if (fields.contains(AiRepository.DATE)) {
+            date.setPrefixComponent(aiBadge());
+        }
+        if (!tagIds.isEmpty()) {
+            tags.setHelperText("Von der KI gesetzt: " + String.join(", ", document.tags().stream()
+                    .filter(tag -> tagIds.contains(tag.id())).map(MasterItem::name).toList()));
+        }
+        if (fields.isEmpty() && tagIds.isEmpty()) {
+            return null;
+        }
+        Paragraph note = new Paragraph();
+        note.setClassName("status-note ai-note");
+        note.add(new Span("Die mit "), aiBadge(), new Span(" markierten Angaben hat die KI-Zuordnung gesetzt. "
+                + "Mit dem Speichern bestätigen Sie sie."));
+        return new Div(note);
+    }
+
+    private static Span aiBadge() {
+        Span badge = Ui.span("ai-badge", "KI");
+        badge.getElement().setAttribute("title", "Von der KI gesetzt");
+        return badge;
     }
 
     static Div field(Component input) {

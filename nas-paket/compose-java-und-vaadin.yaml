@@ -92,5 +92,14 @@ services:
       JAVA_HEAP: -Xmx${WORKER_HEAP_MB:-512}m
     stop_grace_period: 30s
 
+  # Optional: Sprachmodell für die KI-Zuordnung direkt auf dem NAS. Einkommentieren und in der .env
+  # OLLAMA_URL=http://ollama:11434 setzen. Braucht je nach Modell 3 bis 6 GB Arbeitsspeicher und ist ohne
+  # Grafikkarte langsam (oft über eine Minute je Dokument). Das Modell lädt DocuMan beim ersten Mal selbst.
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${DATA_DIR:-./data}/ollama:/root/.ollama
+
 volumes:
   documan_java_db:

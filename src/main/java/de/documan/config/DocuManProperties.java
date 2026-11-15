@@ -47,6 +47,11 @@ public class DocuManProperties {
     private String ocrOutputType = "pdfa";
     private int ocrTimeoutSeconds = 3600;
 
+    private boolean aiLearning = true;
+    private String ollamaUrl = "";
+    private String ollamaModel = "qwen2.5:3b";
+    private int ollamaTimeoutSeconds = 600;
+
     private String dbHost;
     private int dbPort = 5432;
     private String dbName;
@@ -312,6 +317,40 @@ public class DocuManProperties {
 
     public void setOcrTimeoutSeconds(int ocrTimeoutSeconds) {
         this.ocrTimeoutSeconds = ocrTimeoutSeconds;
+    }
+
+    /** Lernende Zuordnung aus den eigenen Dokumenten (AI_LEARNING), standardmäßig an. */
+    public boolean isAiLearning() {
+        return aiLearning;
+    }
+
+    public void setAiLearning(boolean aiLearning) {
+        this.aiLearning = aiLearning;
+    }
+
+    /** Adresse eines Ollama-Servers (OLLAMA_URL), leer schaltet das Sprachmodell ab. */
+    public String getOllamaUrl() {
+        return ollamaUrl;
+    }
+
+    public void setOllamaUrl(String ollamaUrl) {
+        this.ollamaUrl = ollamaUrl == null ? "" : ollamaUrl.strip();
+    }
+
+    public String getOllamaModel() {
+        return ollamaModel;
+    }
+
+    public void setOllamaModel(String ollamaModel) {
+        this.ollamaModel = ollamaModel;
+    }
+
+    public int getOllamaTimeoutSeconds() {
+        return ollamaTimeoutSeconds;
+    }
+
+    public void setOllamaTimeoutSeconds(int ollamaTimeoutSeconds) {
+        this.ollamaTimeoutSeconds = ollamaTimeoutSeconds;
     }
 
     public String getDbHost() {

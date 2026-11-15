@@ -12,6 +12,7 @@ import de.documan.domain.Document;
 import de.documan.domain.DocumentStatus;
 import de.documan.domain.MasterItem;
 import de.documan.domain.MasterKind;
+import de.documan.repo.AiRepository;
 import de.documan.repo.DocumentRepository;
 import de.documan.repo.MasterRepository;
 
@@ -24,9 +25,11 @@ public class DocumentService {
     private final Reindexer reindexer;
     private final MediaStore media;
     private final DocuManProperties properties;
+    private final AiRepository ai;
 
     public DocumentService(DocumentRepository documents, MasterRepository master, Reindexer reindexer,
-            MediaStore media, DocuManProperties properties) {
+            MediaStore media, DocuManProperties properties, AiRepository ai) {
+        this.ai = ai;
         this.documents = documents;
         this.master = master;
         this.reindexer = reindexer;
@@ -54,6 +57,8 @@ public class DocumentService {
             master.getOrCreate(MasterKind.TAG, name).map(MasterItem::id).ifPresent(tags::add);
         }
         documents.setTags(id, tags);
+        // Mit dem Speichern gelten auch die Angaben der KI als bestätigt.
+        ai.confirm(List.of(id));
         renamed(List.of(id));
         reindexer.reindex(id);
     }
@@ -61,6 +66,7 @@ public class DocumentService {
     /** Setzt die eigene Kategorie, null übernimmt die des Dokumenttyps. Die Dateien ziehen danach um. */
     public void setCategory(Long[] ids, Long categoryId) {
         documents.setCategory(ids, categoryId);
+        ai.confirmField(List.of(ids), AiRepository.CATEGORY);
         documents.requestFileSync(ids);
         reindexer.reindex(List.of(ids));
     }
@@ -97,12 +103,14 @@ public class DocumentService {
 
     public void setCorrespondent(List<Long> ids, String name) {
         documents.setCorrespondent(ids.toArray(Long[]::new), masterId(MasterKind.CORRESPONDENT, name));
+        ai.confirmField(ids, AiRepository.CORRESPONDENT);
         renamed(ids);
         reindexer.reindex(ids);
     }
 
     public void setDocumentType(List<Long> ids, String name) {
         documents.setDocumentType(ids.toArray(Long[]::new), masterId(MasterKind.DOCUMENT_TYPE, name));
+        ai.confirmField(ids, AiRepository.TYPE);
         renamed(ids);
         reindexer.reindex(ids);
     }
@@ -112,6 +120,7 @@ public class DocumentService {
         for (long id : ids) {
             documents.addTags(id, List.of(tag.id()));
         }
+        ai.confirmTag(ids, tag.id());
         reindexer.reindex(ids);
         return tag;
     }

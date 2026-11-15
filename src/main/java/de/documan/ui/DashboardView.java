@@ -34,6 +34,7 @@ import de.documan.service.DashboardService.Dashboard;
 import de.documan.service.DashboardService.Pie;
 import de.documan.service.DashboardService.Slice;
 import de.documan.service.StorageService;
+import de.documan.service.ai.AiStatus;
 import de.documan.service.StorageService.Usage;
 import de.documan.web.Fmt;
 import jakarta.annotation.security.PermitAll;
@@ -50,8 +51,11 @@ public class DashboardView extends Div implements Refreshable {
     private final StorageService storage;
     private final Fmt fmt;
     private final boolean admin;
+    private final AiStatus ai;
 
-    public DashboardView(DashboardService dashboard, ActivityRepository activities, StorageService storage, Fmt fmt) {
+    public DashboardView(DashboardService dashboard, ActivityRepository activities, StorageService storage, Fmt fmt,
+            AiStatus ai) {
+        this.ai = ai;
         this.dashboard = dashboard;
         this.activities = activities;
         this.storage = storage;
@@ -108,6 +112,9 @@ public class DashboardView extends Div implements Refreshable {
         StringBuilder grid = new StringBuilder("<section class=\"dash-grid\" aria-label=\"Kategorien\">");
         board.categories().forEach(category -> grid.append(categoryCard(category)));
         add(new Html(grid.append("</section>").toString()));
+        if (admin) {
+            add(aiSection(ai.overview()));
+        }
 
         Section recent = new Section();
         recent.setClassName("dash-section");
@@ -323,5 +330,39 @@ public class DashboardView extends Div implements Refreshable {
         }
         out.append(link(category.manageUrl(), "", "Verwalten"));
         return out.append("</footer></article>").toString();
+    }
+
+    /** Zustand der KI-Zuordnung, nur für Administratoren. */
+    private Section aiSection(AiStatus.Overview status) {
+        Div panel = Ui.div("panel ai-status");
+        if (!status.learning()) {
+            panel.add(Ui.paragraph("", "Die lernende Zuordnung ist ausgeschaltet (AI_LEARNING=false)."));
+        } else if (status.learnedAt() == null) {
+            panel.add(Ui.paragraph("", "Die lernende Zuordnung lernt, sobald das erste Dokument verarbeitet wird."));
+        } else {
+            panel.add(Ui.paragraph("", "Lernende Zuordnung: gelernt aus " + status.learnedDocuments()
+                    + " zugeordneten Dokumenten, Stand " + fmt.dateTime(status.learnedAt()) + "."));
+        }
+        if (!status.modelConfigured()) {
+            panel.add(Ui.paragraph("", "Kein Sprachmodell eingerichtet. Mit OLLAMA_URL in der .env ergänzt ein "
+                    + "Sprachmodell über Ollama, was noch fehlt."));
+        } else {
+            panel.add(Ui.paragraph("", "Sprachmodell: " + status.model() + " unter " + status.modelUrl()
+                    + (status.waiting() > 0 ? ", " + status.waiting() + " Dokument(e) warten" : "") + "."));
+            if (status.modelFailing()) {
+                panel.add(Ui.paragraph("status-note failed", "Fehler am " + fmt.dateTime(status.modelErrorAt()) + ": "
+                        + status.modelError()));
+            } else if (status.modelOkAt() != null) {
+                panel.add(Ui.paragraph("status-note", "Zuletzt erfolgreich: " + fmt.dateTime(status.modelOkAt())));
+            }
+        }
+        panel.add(Ui.paragraph("help", "Von der KI gesetzte Angaben bisher: " + status.assigned()
+                + ". Sie bleiben am Dokument markiert, bis es gespeichert wird."));
+        Header head = new Header(new H2("KI-Zuordnung"));
+        head.setClassName("section-head");
+        Section section = new Section(head, panel);
+        section.setClassName("dash-section");
+        section.getElement().setAttribute("aria-label", "KI-Zuordnung");
+        return section;
     }
 }

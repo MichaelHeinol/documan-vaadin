@@ -27,6 +27,7 @@ import de.documan.domain.MasterKind;
 import de.documan.repo.DocumentRepository;
 import de.documan.repo.DocumentRepository.Processed;
 import de.documan.repo.MasterRepository;
+import de.documan.service.ai.AiAssignmentService;
 
 /** Macht aus einem Original ein durchsuchbares Dokument. */
 @Service
@@ -53,9 +54,11 @@ public class PipelineService {
     private final Reindexer reindexer;
     private final MediaStore media;
     private final ProcessRunner processes;
+    private final AiAssignmentService ai;
 
     public PipelineService(DocuManProperties properties, DocumentRepository documents, MasterRepository master,
-            Reindexer reindexer, MediaStore media, ProcessRunner processes) {
+            Reindexer reindexer, MediaStore media, ProcessRunner processes, AiAssignmentService ai) {
+        this.ai = ai;
         this.properties = properties;
         this.documents = documents;
         this.master = master;
@@ -280,6 +283,7 @@ public class PipelineService {
         log.info("Verarbeite #{}: {}", document.id(), document.originalFilename());
         try {
             documents.saveProcessed(document.id(), processDocument(document));
+            ai.afterProcessing(document.id());
             log.info("#{} fertig in {} s", document.id(),
                     String.format("%.1f", (System.nanoTime() - started) / 1e9));
         } catch (ProcessingException error) {

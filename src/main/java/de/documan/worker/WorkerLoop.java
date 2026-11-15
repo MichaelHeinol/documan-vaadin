@@ -18,6 +18,7 @@ import de.documan.service.InboxWatchers;
 import de.documan.service.IngestService;
 import de.documan.service.PipelineService;
 import de.documan.service.StorageService;
+import de.documan.service.ai.AiAssignmentService;
 import de.documan.service.backup.BackupService;
 import de.documan.service.mail.MailImportService;
 
@@ -47,12 +48,14 @@ public class WorkerLoop implements SmartLifecycle {
     private final InboxFolder inbox;
     private final StorageService storage;
     private final DailyReportService dailyReport;
+    private final AiAssignmentService ai;
     private volatile boolean stopping;
     private Thread thread;
 
     public WorkerLoop(DocuManProperties properties, PipelineService pipeline, MailImportService mail,
             BackupService backup, IngestService ingest, FilingService filing, InboxFolder inbox,
-            StorageService storage, DailyReportService dailyReport) {
+            StorageService storage, DailyReportService dailyReport, AiAssignmentService ai) {
+        this.ai = ai;
         this.properties = properties;
         this.pipeline = pipeline;
         this.mail = mail;
@@ -146,7 +149,9 @@ public class WorkerLoop implements SmartLifecycle {
                     storage.measure();
                     nextStorage = now + STORAGE_CHECK_NANOS;
                 }
-                busy = backup.runNext(() -> stopping) || pipeline.processNext() || filing.refileNext();
+                // Das Sprachmodell kommt zuletzt: Es ist langsam und soll neue Dokumente nicht aufhalten.
+                busy = backup.runNext(() -> stopping) || pipeline.processNext() || filing.refileNext()
+                        || ai.languageModelNext();
             } catch (RuntimeException error) {
                 log.error("Fehler in der Worker-Schleife", error);
                 pause(ERROR_RETRY_NANOS);
