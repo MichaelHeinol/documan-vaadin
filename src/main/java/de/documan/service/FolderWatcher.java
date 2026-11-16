@@ -137,11 +137,20 @@ public class FolderWatcher {
      * <p>Scanner schreiben über das Netz oft minutenlang in dieselbe Datei.
      */
     public int scan() {
+        return scan(false);
+    }
+
+    /**
+     * Wie scan(). Mit manual (von Hand angestoßen) gilt eine Datei auch schon beim ersten Sehen als fertig, wenn ihr
+     * Änderungszeitpunkt mindestens so lange zurückliegt wie die Wartezeit.
+     */
+    public int scan(boolean manual) {
         if (!Files.isDirectory(root)) {
             log.error("Eingangsordner {} fehlt", root);
             return 0;
         }
         double now = clock.getAsDouble();
+        long wallNanos = System.currentTimeMillis() * 1_000_000L;
         Map<Path, Sighting> current = new HashMap<>();
         int imported = 0;
         for (Found file : files()) {
@@ -150,7 +159,8 @@ public class FolderWatcher {
             }
             Sighting previous = seen.get(file.path());
             double since = previous != null && previous.signature().equals(file.signature()) ? previous.since() : now;
-            if (file.signature().size() > 0 && now - since >= stableSeconds) {
+            boolean untouched = manual && wallNanos - file.signature().modifiedNanos() >= stableSeconds * 1e9;
+            if (file.signature().size() > 0 && (now - since >= stableSeconds || untouched)) {
                 imported += consume(file.path(), file.signature());
             } else {
                 current.put(file.path(), new Sighting(file.signature(), since));

@@ -424,7 +424,10 @@ public class DocumentRepository {
                     (SELECT concat_ws('-', count(*), max(id)) FROM document_type),
                     (SELECT concat_ws('-', count(*), max(id)) FROM tag),
                     (SELECT concat_ws('-', count(*), max(id)) FROM category),
-                    (SELECT concat_ws('-', count(*), max(id)) FROM import_rejection))
+                    (SELECT concat_ws('-', count(*), max(id)) FROM import_rejection),
+                    (SELECT count(*) FROM document WHERE ai_pending),
+                    (SELECT coalesce(current_document_id, 0) FROM ai_status WHERE id = 1),
+                    (SELECT handled_at FROM worker_request WHERE kind = 'consume'))
                 """).query(String.class).single();
     }
 

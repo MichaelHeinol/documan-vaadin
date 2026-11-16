@@ -78,6 +78,7 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
     private ComboBox<String> addedBy;
     private TextArea notes;
     private final AiRepository ai;
+    private AiRepository.Analysis analysis = AiRepository.Analysis.NONE;
 
     public DocumentView(DocumentRepository documents, DocumentService service, MasterRepository master,
             Filters filters, ActivityRepository activities, Fmt fmt, AiRepository ai) {
@@ -120,7 +121,8 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
     @Override
     public void refresh() {
         documents.find(document.id()).ifPresentOrElse(fresh -> {
-            if (fresh.version() != document.version() || fresh.status() != document.status()) {
+            if (fresh.version() != document.version() || fresh.status() != document.status()
+                    || ai.analysis(fresh.id()) != analysis) {
                 document = fresh;
                 render();
             }
@@ -180,6 +182,14 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         } else if (!document.isFinished()) {
             side.add(Ui.div("status-note", new Span(document.status().label() + ": Text und Vorschau erscheinen "
                     + "automatisch. Bis dahin lassen sich die Angaben nicht bearbeiten.")));
+        }
+        analysis = ai.analysis(document.id());
+        if (analysis == AiRepository.Analysis.RUNNING) {
+            side.add(Ui.div("status-note ai-note", new Span("KI-Analyse läuft: Das Sprachmodell ergänzt gerade fehlende "
+                    + "Angaben. Die Seite zeigt sie, sobald es fertig ist.")));
+        } else if (analysis == AiRepository.Analysis.WAITING) {
+            side.add(Ui.div("status-note", new Span("Wartet auf die KI-Analyse: Das Sprachmodell ergänzt bald fehlende "
+                    + "Angaben. Speichern Sie erst danach, sonst bleibt das Dokument, wie es ist.")));
         }
 
         side.add(form());

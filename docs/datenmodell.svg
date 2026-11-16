@@ -9,7 +9,7 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(21.6 2522.21)">
 <title>documan</title>
 <polygon fill="white" stroke="transparent" points="-21.6,21.6 -21.6,-2522.21 1086.6,-2522.21 1086.6,21.6 -21.6,21.6"/>
-<text text-anchor="middle" x="532.5" y="-2483.81" font-family="DejaVu Sans" font-size="16.00">DocuMan – Datenmodell (Java und Vaadin, Migration V23)</text>
+<text text-anchor="middle" x="532.5" y="-2483.81" font-family="DejaVu Sans" font-size="16.00">DocuMan – Datenmodell (Java und Vaadin, Migration V24)</text>
 <g id="clust1" class="cluster">
 <title>cluster_Dokumente</title>
 <path fill="white" stroke="#1d4ed8" d="M550,-720.61C550,-720.61 1045,-720.61 1045,-720.61 1051,-720.61 1057,-726.61 1057,-732.61 1057,-732.61 1057,-1479.61 1057,-1479.61 1057,-1485.61 1051,-1491.61 1045,-1491.61 1045,-1491.61 550,-1491.61 550,-1491.61 544,-1491.61 538,-1485.61 538,-1479.61 538,-1479.61 538,-732.61 538,-732.61 538,-726.61 544,-720.61 550,-720.61"/>
@@ -27,8 +27,8 @@
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_Benutzer und Betrieb</title>
-<path fill="white" stroke="#7e22ce" d="M20,-1643.61C20,-1643.61 1033.5,-1643.61 1033.5,-1643.61 1039.5,-1643.61 1045.5,-1649.61 1045.5,-1655.61 1045.5,-1655.61 1045.5,-2454.61 1045.5,-2454.61 1045.5,-2460.61 1039.5,-2466.61 1033.5,-2466.61 1033.5,-2466.61 20,-2466.61 20,-2466.61 14,-2466.61 8,-2460.61 8,-2454.61 8,-2454.61 8,-1655.61 8,-1655.61 8,-1649.61 14,-1643.61 20,-1643.61"/>
-<text text-anchor="middle" x="526.75" y="-2453.01" font-family="DejaVu Sans" font-size="12.00" fill="#7e22ce">Benutzer und Betrieb</text>
+<path fill="white" stroke="#7e22ce" d="M20,-1643.61C20,-1643.61 1036.5,-1643.61 1036.5,-1643.61 1042.5,-1643.61 1048.5,-1649.61 1048.5,-1655.61 1048.5,-1655.61 1048.5,-2454.61 1048.5,-2454.61 1048.5,-2460.61 1042.5,-2466.61 1036.5,-2466.61 1036.5,-2466.61 20,-2466.61 20,-2466.61 14,-2466.61 8,-2460.61 8,-2454.61 8,-2454.61 8,-1655.61 8,-1655.61 8,-1649.61 14,-1643.61 20,-1643.61"/>
+<text text-anchor="middle" x="528.25" y="-2453.01" font-family="DejaVu Sans" font-size="12.00" fill="#7e22ce">Benutzer und Betrieb</text>
 </g>
 <!-- document -->
 <g id="node1" class="node">
@@ -917,46 +917,58 @@
 <!-- ai_status -->
 <g id="node20" class="node">
 <title>ai_status</title>
-<polygon fill="#f3e8ff" stroke="transparent" points="847.5,-1971.61 847.5,-2139.61 1037.5,-2139.61 1037.5,-1971.61 847.5,-1971.61"/>
-<polygon fill="#7e22ce" stroke="transparent" points="847.5,-2118.61 847.5,-2139.61 1037.5,-2139.61 1037.5,-2118.61 847.5,-2118.61"/>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-2118.61 847.5,-2139.61 1037.5,-2139.61 1037.5,-2118.61 847.5,-2118.61"/>
-<text text-anchor="start" x="917" y="-2127.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">ai_status</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-2097.61 847.5,-2118.61 954.5,-2118.61 954.5,-2097.61 847.5,-2097.61"/>
-<text text-anchor="start" x="852.5" y="-2106.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
-<text text-anchor="start" x="868.5" y="-2106.61" font-family="DejaVu Sans" font-size="10.00"> </text>
-<text text-anchor="start" x="872.5" y="-2106.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">id</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-2097.61 954.5,-2118.61 1037.5,-2118.61 1037.5,-2097.61 954.5,-2097.61"/>
-<text text-anchor="start" x="959.5" y="-2105.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">smallint</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-2076.61 847.5,-2097.61 954.5,-2097.61 954.5,-2076.61 847.5,-2076.61"/>
-<text text-anchor="start" x="852.5" y="-2084.61" font-family="DejaVu Sans" font-size="10.00">learned_at</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-2076.61 954.5,-2097.61 1037.5,-2097.61 1037.5,-2076.61 954.5,-2076.61"/>
-<text text-anchor="start" x="959.5" y="-2085.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
-<text text-anchor="start" x="1022.5" y="-2085.61" font-family="DejaVu Sans" font-size="10.00"> </text>
-<text text-anchor="start" x="1026.5" y="-2085.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-2055.61 847.5,-2076.61 954.5,-2076.61 954.5,-2055.61 847.5,-2055.61"/>
-<text text-anchor="start" x="852.5" y="-2063.61" font-family="DejaVu Sans" font-size="10.00">learned_documents</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-2055.61 954.5,-2076.61 1037.5,-2076.61 1037.5,-2055.61 954.5,-2055.61"/>
-<text text-anchor="start" x="959.5" y="-2063.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">int</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-2034.61 847.5,-2055.61 954.5,-2055.61 954.5,-2034.61 847.5,-2034.61"/>
-<text text-anchor="start" x="852.5" y="-2042.61" font-family="DejaVu Sans" font-size="10.00">model_ok_at</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-2034.61 954.5,-2055.61 1037.5,-2055.61 1037.5,-2034.61 954.5,-2034.61"/>
-<text text-anchor="start" x="959.5" y="-2043.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
-<text text-anchor="start" x="1022.5" y="-2043.61" font-family="DejaVu Sans" font-size="10.00"> </text>
-<text text-anchor="start" x="1026.5" y="-2043.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-2013.61 847.5,-2034.61 954.5,-2034.61 954.5,-2013.61 847.5,-2013.61"/>
-<text text-anchor="start" x="852.5" y="-2021.61" font-family="DejaVu Sans" font-size="10.00">model_error</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-2013.61 954.5,-2034.61 1037.5,-2034.61 1037.5,-2013.61 954.5,-2013.61"/>
-<text text-anchor="start" x="959.5" y="-2021.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">text</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-1992.61 847.5,-2013.61 954.5,-2013.61 954.5,-1992.61 847.5,-1992.61"/>
-<text text-anchor="start" x="852.5" y="-2000.61" font-family="DejaVu Sans" font-size="10.00">model_error_at</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-1992.61 954.5,-2013.61 1037.5,-2013.61 1037.5,-1992.61 954.5,-1992.61"/>
-<text text-anchor="start" x="959.5" y="-2001.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
-<text text-anchor="start" x="1022.5" y="-2001.61" font-family="DejaVu Sans" font-size="10.00"> </text>
-<text text-anchor="start" x="1026.5" y="-2001.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
-<polygon fill="none" stroke="#7e22ce" points="847.5,-1971.61 847.5,-1992.61 954.5,-1992.61 954.5,-1971.61 847.5,-1971.61"/>
-<text text-anchor="start" x="852.5" y="-1979.61" font-family="DejaVu Sans" font-size="10.00">assigned</text>
-<polygon fill="none" stroke="#7e22ce" points="954.5,-1971.61 954.5,-1992.61 1037.5,-1992.61 1037.5,-1971.61 954.5,-1971.61"/>
-<text text-anchor="start" x="959.5" y="-1979.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">int</text>
+<polygon fill="#f3e8ff" stroke="transparent" points="844.5,-1950.61 844.5,-2160.61 1040.5,-2160.61 1040.5,-1950.61 844.5,-1950.61"/>
+<polygon fill="#7e22ce" stroke="transparent" points="844.5,-2139.61 844.5,-2160.61 1040.5,-2160.61 1040.5,-2139.61 844.5,-2139.61"/>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2139.61 844.5,-2160.61 1040.5,-2160.61 1040.5,-2139.61 844.5,-2139.61"/>
+<text text-anchor="start" x="917" y="-2148.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">ai_status</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2118.61 844.5,-2139.61 957.5,-2139.61 957.5,-2118.61 844.5,-2118.61"/>
+<text text-anchor="start" x="849.5" y="-2127.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
+<text text-anchor="start" x="865.5" y="-2127.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="869.5" y="-2127.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">id</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-2118.61 957.5,-2139.61 1040.5,-2139.61 1040.5,-2118.61 957.5,-2118.61"/>
+<text text-anchor="start" x="962.5" y="-2126.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">smallint</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2097.61 844.5,-2118.61 957.5,-2118.61 957.5,-2097.61 844.5,-2097.61"/>
+<text text-anchor="start" x="849.5" y="-2105.61" font-family="DejaVu Sans" font-size="10.00">learned_at</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-2097.61 957.5,-2118.61 1040.5,-2118.61 1040.5,-2097.61 957.5,-2097.61"/>
+<text text-anchor="start" x="962.5" y="-2106.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<text text-anchor="start" x="1025.5" y="-2106.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="1029.5" y="-2106.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2076.61 844.5,-2097.61 957.5,-2097.61 957.5,-2076.61 844.5,-2076.61"/>
+<text text-anchor="start" x="849.5" y="-2084.61" font-family="DejaVu Sans" font-size="10.00">learned_documents</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-2076.61 957.5,-2097.61 1040.5,-2097.61 1040.5,-2076.61 957.5,-2076.61"/>
+<text text-anchor="start" x="962.5" y="-2084.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">int</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2055.61 844.5,-2076.61 957.5,-2076.61 957.5,-2055.61 844.5,-2055.61"/>
+<text text-anchor="start" x="849.5" y="-2063.61" font-family="DejaVu Sans" font-size="10.00">model_ok_at</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-2055.61 957.5,-2076.61 1040.5,-2076.61 1040.5,-2055.61 957.5,-2055.61"/>
+<text text-anchor="start" x="962.5" y="-2064.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<text text-anchor="start" x="1025.5" y="-2064.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="1029.5" y="-2064.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2034.61 844.5,-2055.61 957.5,-2055.61 957.5,-2034.61 844.5,-2034.61"/>
+<text text-anchor="start" x="849.5" y="-2042.61" font-family="DejaVu Sans" font-size="10.00">model_error</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-2034.61 957.5,-2055.61 1040.5,-2055.61 1040.5,-2034.61 957.5,-2034.61"/>
+<text text-anchor="start" x="962.5" y="-2042.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">text</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-2013.61 844.5,-2034.61 957.5,-2034.61 957.5,-2013.61 844.5,-2013.61"/>
+<text text-anchor="start" x="849.5" y="-2021.61" font-family="DejaVu Sans" font-size="10.00">model_error_at</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-2013.61 957.5,-2034.61 1040.5,-2034.61 1040.5,-2013.61 957.5,-2013.61"/>
+<text text-anchor="start" x="962.5" y="-2022.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<text text-anchor="start" x="1025.5" y="-2022.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="1029.5" y="-2022.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-1992.61 844.5,-2013.61 957.5,-2013.61 957.5,-1992.61 844.5,-1992.61"/>
+<text text-anchor="start" x="849.5" y="-2000.61" font-family="DejaVu Sans" font-size="10.00">assigned</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-1992.61 957.5,-2013.61 1040.5,-2013.61 1040.5,-1992.61 957.5,-1992.61"/>
+<text text-anchor="start" x="962.5" y="-2000.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">int</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-1971.61 844.5,-1992.61 957.5,-1992.61 957.5,-1971.61 844.5,-1971.61"/>
+<text text-anchor="start" x="849.5" y="-1979.61" font-family="DejaVu Sans" font-size="10.00">current_document_id</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-1971.61 957.5,-1992.61 1040.5,-1992.61 1040.5,-1971.61 957.5,-1971.61"/>
+<text text-anchor="start" x="962.5" y="-1980.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
+<text text-anchor="start" x="990.5" y="-1980.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="994.5" y="-1980.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
+<polygon fill="none" stroke="#7e22ce" points="844.5,-1950.61 844.5,-1971.61 957.5,-1971.61 957.5,-1950.61 844.5,-1950.61"/>
+<text text-anchor="start" x="849.5" y="-1958.61" font-family="DejaVu Sans" font-size="10.00">current_since</text>
+<polygon fill="none" stroke="#7e22ce" points="957.5,-1950.61 957.5,-1971.61 1040.5,-1971.61 1040.5,-1950.61 957.5,-1950.61"/>
+<text text-anchor="start" x="962.5" y="-1959.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<text text-anchor="start" x="1025.5" y="-1959.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="1029.5" y="-1959.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
 </g>
 <!-- backup_settings&#45;&gt;ai_status -->
 <!-- backup_run -->
@@ -1038,52 +1050,87 @@
 <!-- consume_folder -->
 <g id="node18" class="node">
 <title>consume_folder</title>
-<polygon fill="#f3e8ff" stroke="transparent" points="287,-1751.11 287,-1814.11 456,-1814.11 456,-1751.11 287,-1751.11"/>
-<polygon fill="#7e22ce" stroke="transparent" points="287.5,-1792.61 287.5,-1813.61 456.5,-1813.61 456.5,-1792.61 287.5,-1792.61"/>
-<polygon fill="none" stroke="#7e22ce" points="287.5,-1792.61 287.5,-1813.61 456.5,-1813.61 456.5,-1792.61 287.5,-1792.61"/>
-<text text-anchor="start" x="327" y="-1801.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">consume_folder</text>
-<polygon fill="none" stroke="#7e22ce" points="287.5,-1771.61 287.5,-1792.61 383.5,-1792.61 383.5,-1771.61 287.5,-1771.61"/>
-<text text-anchor="start" x="292.5" y="-1780.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
-<text text-anchor="start" x="308.5" y="-1780.61" font-family="DejaVu Sans" font-size="10.00"> </text>
-<text text-anchor="start" x="312.5" y="-1780.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">id</text>
-<polygon fill="none" stroke="#7e22ce" points="383.5,-1771.61 383.5,-1792.61 456.5,-1792.61 456.5,-1771.61 383.5,-1771.61"/>
-<text text-anchor="start" x="388.5" y="-1779.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
-<polygon fill="none" stroke="#7e22ce" points="287.5,-1750.61 287.5,-1771.61 383.5,-1771.61 383.5,-1750.61 287.5,-1750.61"/>
-<text text-anchor="start" x="292.5" y="-1759.61" font-family="DejaVu Sans" font-size="10.00">folder </text>
-<text text-anchor="start" x="324.5" y="-1759.61" font-family="DejaVu Sans" font-size="10.00" fill="#64748b">(eindeutig)</text>
-<polygon fill="none" stroke="#7e22ce" points="383.5,-1750.61 383.5,-1771.61 456.5,-1771.61 456.5,-1750.61 383.5,-1750.61"/>
-<text text-anchor="start" x="388.5" y="-1758.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">varchar(500)</text>
+<polygon fill="#f3e8ff" stroke="transparent" points="287,-1735.11 287,-1798.11 456,-1798.11 456,-1735.11 287,-1735.11"/>
+<polygon fill="#7e22ce" stroke="transparent" points="287.5,-1776.61 287.5,-1797.61 456.5,-1797.61 456.5,-1776.61 287.5,-1776.61"/>
+<polygon fill="none" stroke="#7e22ce" points="287.5,-1776.61 287.5,-1797.61 456.5,-1797.61 456.5,-1776.61 287.5,-1776.61"/>
+<text text-anchor="start" x="327" y="-1785.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">consume_folder</text>
+<polygon fill="none" stroke="#7e22ce" points="287.5,-1755.61 287.5,-1776.61 383.5,-1776.61 383.5,-1755.61 287.5,-1755.61"/>
+<text text-anchor="start" x="292.5" y="-1764.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
+<text text-anchor="start" x="308.5" y="-1764.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="312.5" y="-1764.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">id</text>
+<polygon fill="none" stroke="#7e22ce" points="383.5,-1755.61 383.5,-1776.61 456.5,-1776.61 456.5,-1755.61 383.5,-1755.61"/>
+<text text-anchor="start" x="388.5" y="-1763.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
+<polygon fill="none" stroke="#7e22ce" points="287.5,-1734.61 287.5,-1755.61 383.5,-1755.61 383.5,-1734.61 287.5,-1734.61"/>
+<text text-anchor="start" x="292.5" y="-1743.61" font-family="DejaVu Sans" font-size="10.00">folder </text>
+<text text-anchor="start" x="324.5" y="-1743.61" font-family="DejaVu Sans" font-size="10.00" fill="#64748b">(eindeutig)</text>
+<polygon fill="none" stroke="#7e22ce" points="383.5,-1734.61 383.5,-1755.61 456.5,-1755.61 456.5,-1734.61 383.5,-1734.61"/>
+<text text-anchor="start" x="388.5" y="-1742.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">varchar(500)</text>
 </g>
 <!-- backup_run&#45;&gt;consume_folder -->
 <!-- storage_usage -->
 <g id="node19" class="node">
 <title>storage_usage</title>
-<polygon fill="#f3e8ff" stroke="transparent" points="572.5,-1704.11 572.5,-1809.11 719.5,-1809.11 719.5,-1704.11 572.5,-1704.11"/>
-<polygon fill="#7e22ce" stroke="transparent" points="573,-1787.61 573,-1808.61 720,-1808.61 720,-1787.61 573,-1787.61"/>
-<polygon fill="none" stroke="#7e22ce" points="573,-1787.61 573,-1808.61 720,-1808.61 720,-1787.61 573,-1787.61"/>
-<text text-anchor="start" x="605" y="-1796.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">storage_usage</text>
-<polygon fill="none" stroke="#7e22ce" points="573,-1766.61 573,-1787.61 647,-1787.61 647,-1766.61 573,-1766.61"/>
-<text text-anchor="start" x="578" y="-1775.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
-<text text-anchor="start" x="594" y="-1775.61" font-family="DejaVu Sans" font-size="10.00"> </text>
-<text text-anchor="start" x="598" y="-1775.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">id</text>
-<polygon fill="none" stroke="#7e22ce" points="647,-1766.61 647,-1787.61 720,-1787.61 720,-1766.61 647,-1766.61"/>
-<text text-anchor="start" x="652" y="-1774.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">smallint</text>
-<polygon fill="none" stroke="#7e22ce" points="573,-1745.61 573,-1766.61 647,-1766.61 647,-1745.61 573,-1745.61"/>
-<text text-anchor="start" x="578" y="-1753.61" font-family="DejaVu Sans" font-size="10.00">media</text>
-<polygon fill="none" stroke="#7e22ce" points="647,-1745.61 647,-1766.61 720,-1766.61 720,-1745.61 647,-1745.61"/>
-<text text-anchor="start" x="652" y="-1753.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
-<polygon fill="none" stroke="#7e22ce" points="573,-1724.61 573,-1745.61 647,-1745.61 647,-1724.61 573,-1724.61"/>
-<text text-anchor="start" x="578" y="-1732.61" font-family="DejaVu Sans" font-size="10.00">backups</text>
-<polygon fill="none" stroke="#7e22ce" points="647,-1724.61 647,-1745.61 720,-1745.61 720,-1724.61 647,-1724.61"/>
-<text text-anchor="start" x="652" y="-1732.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
-<polygon fill="none" stroke="#7e22ce" points="573,-1703.61 573,-1724.61 647,-1724.61 647,-1703.61 573,-1703.61"/>
-<text text-anchor="start" x="578" y="-1711.61" font-family="DejaVu Sans" font-size="10.00">measured_at</text>
-<polygon fill="none" stroke="#7e22ce" points="647,-1703.61 647,-1724.61 720,-1724.61 720,-1703.61 647,-1703.61"/>
-<text text-anchor="start" x="652" y="-1711.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<polygon fill="#f3e8ff" stroke="transparent" points="572.5,-1693.11 572.5,-1798.11 719.5,-1798.11 719.5,-1693.11 572.5,-1693.11"/>
+<polygon fill="#7e22ce" stroke="transparent" points="573,-1776.61 573,-1797.61 720,-1797.61 720,-1776.61 573,-1776.61"/>
+<polygon fill="none" stroke="#7e22ce" points="573,-1776.61 573,-1797.61 720,-1797.61 720,-1776.61 573,-1776.61"/>
+<text text-anchor="start" x="605" y="-1785.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">storage_usage</text>
+<polygon fill="none" stroke="#7e22ce" points="573,-1755.61 573,-1776.61 647,-1776.61 647,-1755.61 573,-1755.61"/>
+<text text-anchor="start" x="578" y="-1764.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
+<text text-anchor="start" x="594" y="-1764.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="598" y="-1764.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">id</text>
+<polygon fill="none" stroke="#7e22ce" points="647,-1755.61 647,-1776.61 720,-1776.61 720,-1755.61 647,-1755.61"/>
+<text text-anchor="start" x="652" y="-1763.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">smallint</text>
+<polygon fill="none" stroke="#7e22ce" points="573,-1734.61 573,-1755.61 647,-1755.61 647,-1734.61 573,-1734.61"/>
+<text text-anchor="start" x="578" y="-1742.61" font-family="DejaVu Sans" font-size="10.00">media</text>
+<polygon fill="none" stroke="#7e22ce" points="647,-1734.61 647,-1755.61 720,-1755.61 720,-1734.61 647,-1734.61"/>
+<text text-anchor="start" x="652" y="-1742.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
+<polygon fill="none" stroke="#7e22ce" points="573,-1713.61 573,-1734.61 647,-1734.61 647,-1713.61 573,-1713.61"/>
+<text text-anchor="start" x="578" y="-1721.61" font-family="DejaVu Sans" font-size="10.00">backups</text>
+<polygon fill="none" stroke="#7e22ce" points="647,-1713.61 647,-1734.61 720,-1734.61 720,-1713.61 647,-1713.61"/>
+<text text-anchor="start" x="652" y="-1721.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">bigint</text>
+<polygon fill="none" stroke="#7e22ce" points="573,-1692.61 573,-1713.61 647,-1713.61 647,-1692.61 573,-1692.61"/>
+<text text-anchor="start" x="578" y="-1700.61" font-family="DejaVu Sans" font-size="10.00">measured_at</text>
+<polygon fill="none" stroke="#7e22ce" points="647,-1692.61 647,-1713.61 720,-1713.61 720,-1692.61 647,-1692.61"/>
+<text text-anchor="start" x="652" y="-1700.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
 </g>
 <!-- consume_folder&#45;&gt;storage_usage -->
-<!-- legende -->
+<!-- worker_request -->
 <g id="node21" class="node">
+<title>worker_request</title>
+<polygon fill="#f3e8ff" stroke="transparent" points="862.5,-1682.61 862.5,-1808.61 1022.5,-1808.61 1022.5,-1682.61 862.5,-1682.61"/>
+<polygon fill="#7e22ce" stroke="transparent" points="862.5,-1787.61 862.5,-1808.61 1022.5,-1808.61 1022.5,-1787.61 862.5,-1787.61"/>
+<polygon fill="none" stroke="#7e22ce" points="862.5,-1787.61 862.5,-1808.61 1022.5,-1808.61 1022.5,-1787.61 862.5,-1787.61"/>
+<text text-anchor="start" x="898" y="-1796.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="white">worker_request</text>
+<polygon fill="none" stroke="#7e22ce" points="862.5,-1766.61 862.5,-1787.61 939.5,-1787.61 939.5,-1766.61 862.5,-1766.61"/>
+<text text-anchor="start" x="867.5" y="-1775.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>
+<text text-anchor="start" x="883.5" y="-1775.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="887.5" y="-1775.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">kind</text>
+<polygon fill="none" stroke="#7e22ce" points="939.5,-1766.61 939.5,-1787.61 1022.5,-1787.61 1022.5,-1766.61 939.5,-1766.61"/>
+<text text-anchor="start" x="944.5" y="-1774.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">varchar(20)</text>
+<polygon fill="none" stroke="#7e22ce" points="862.5,-1745.61 862.5,-1766.61 939.5,-1766.61 939.5,-1745.61 862.5,-1745.61"/>
+<text text-anchor="start" x="867.5" y="-1753.61" font-family="DejaVu Sans" font-size="10.00">requested_at</text>
+<polygon fill="none" stroke="#7e22ce" points="939.5,-1745.61 939.5,-1766.61 1022.5,-1766.61 1022.5,-1745.61 939.5,-1745.61"/>
+<text text-anchor="start" x="944.5" y="-1754.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<text text-anchor="start" x="1007.5" y="-1754.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="1011.5" y="-1754.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
+<polygon fill="none" stroke="#7e22ce" points="862.5,-1724.61 862.5,-1745.61 939.5,-1745.61 939.5,-1724.61 862.5,-1724.61"/>
+<text text-anchor="start" x="867.5" y="-1732.61" font-family="DejaVu Sans" font-size="10.00">requested_by</text>
+<polygon fill="none" stroke="#7e22ce" points="939.5,-1724.61 939.5,-1745.61 1022.5,-1745.61 1022.5,-1724.61 939.5,-1724.61"/>
+<text text-anchor="start" x="944.5" y="-1732.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">varchar(150)</text>
+<polygon fill="none" stroke="#7e22ce" points="862.5,-1703.61 862.5,-1724.61 939.5,-1724.61 939.5,-1703.61 862.5,-1703.61"/>
+<text text-anchor="start" x="867.5" y="-1711.61" font-family="DejaVu Sans" font-size="10.00">handled_at</text>
+<polygon fill="none" stroke="#7e22ce" points="939.5,-1703.61 939.5,-1724.61 1022.5,-1724.61 1022.5,-1703.61 939.5,-1703.61"/>
+<text text-anchor="start" x="944.5" y="-1712.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">timestamptz</text>
+<text text-anchor="start" x="1007.5" y="-1712.61" font-family="DejaVu Sans" font-size="10.00"> </text>
+<text text-anchor="start" x="1011.5" y="-1712.61" font-family="DejaVu Sans" font-size="10.00" fill="#94a3b8">?</text>
+<polygon fill="none" stroke="#7e22ce" points="862.5,-1682.61 862.5,-1703.61 939.5,-1703.61 939.5,-1682.61 862.5,-1682.61"/>
+<text text-anchor="start" x="867.5" y="-1690.61" font-family="DejaVu Sans" font-size="10.00">result</text>
+<polygon fill="none" stroke="#7e22ce" points="939.5,-1682.61 939.5,-1703.61 1022.5,-1703.61 1022.5,-1682.61 939.5,-1682.61"/>
+<text text-anchor="start" x="944.5" y="-1690.61" font-family="DejaVu Sans" font-size="10.00" fill="#475569">varchar(500)</text>
+</g>
+<!-- storage_usage&#45;&gt;worker_request -->
+<!-- legende -->
+<g id="node22" class="node">
 <title>legende</title>
 <text text-anchor="start" x="843.5" y="-1622.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00">Legende</text>
 <text text-anchor="start" x="843.5" y="-1603.61" font-family="DejaVu Sans" font-weight="bold" font-size="10.00" fill="#b45309">PK</text>

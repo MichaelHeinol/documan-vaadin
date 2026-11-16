@@ -1,7 +1,7 @@
 # Datenmodell
 
 Die Datenbank ist in der Java- und der Vaadin-Version identisch, beide spielen dieselben Flyway-Migrationen ein
-(Stand: V23). Die Grafik gibt es als [SVG](datenmodell.svg) und [PDF](datenmodell.pdf). Das Diagramm unten zeigt
+(Stand: V24). Die Grafik gibt es als [SVG](datenmodell.svg) und [PDF](datenmodell.pdf). Das Diagramm unten zeigt
 GitHub direkt an.
 
 | Bereich | Tabelle | Inhalt |
@@ -25,7 +25,8 @@ GitHub direkt an.
 | Betrieb | `backup_run` | Aufträge für Sicherung, Wiederherstellung und Umzug mit Fortschritt |
 | Betrieb | `consume_folder` | Weitere Eingangsordner |
 | Betrieb | `storage_usage` | Zuletzt gemessener Speicherbedarf (eine Zeile) |
-| Betrieb | `ai_status` | Zustand der KI-Zuordnung für die Übersicht (eine Zeile) |
+| Betrieb | `ai_status` | Zustand der KI-Zuordnung für die Übersicht (eine Zeile), auch welches Dokument das Sprachmodell gerade analysiert |
+| Betrieb | `worker_request` | Aufträge der Oberfläche an den Worker, etwa die Eingangsordner sofort einzulesen |
 
 Löschregeln: Gelöschte Stammdaten lassen die Dokumente stehen, der Verweis wird leer (`SET NULL`). Mit einem
 Dokument oder Postfach verschwinden seine Tag-Zuordnungen, Ausschlussregeln und verarbeiteten Nachrichten
@@ -49,6 +50,8 @@ erDiagram
         text model_error
         timestamptz model_error_at
         int assigned
+        bigint current_document_id
+        timestamptz current_since
     }
     app_user {
         bigint id PK
@@ -244,6 +247,13 @@ erDiagram
         varchar_500 match_text
         boolean ignore_case
         varchar_7 color
+    }
+    worker_request {
+        varchar_20 kind PK
+        timestamptz requested_at
+        varchar_150 requested_by
+        timestamptz handled_at
+        varchar_500 result
     }
     category |o--o{ category : "parent_id"
     app_user ||--o{ daily_report_excluded : "user_id"

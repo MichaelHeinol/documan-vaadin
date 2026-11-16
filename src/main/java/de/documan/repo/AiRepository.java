@@ -212,6 +212,49 @@ public class AiRepository {
         return timestamp == null ? null : timestamp.toInstant();
     }
 
+    /** Stand der KI-Analyse eines Dokuments für die Oberfläche. */
+    public enum Analysis {
+        /** Keine Analyse durch das Sprachmodell vorgemerkt. */
+        NONE,
+        /** Vorgemerkt, das Sprachmodell ist noch nicht dran. */
+        WAITING,
+        /** Das Sprachmodell analysiert das Dokument gerade. */
+        RUNNING
+    }
+
+    public Analysis analysis(long id) {
+        return jdbc.sql("""
+                SELECT CASE WHEN (SELECT current_document_id FROM ai_status WHERE id = 1) = d.id THEN 'RUNNING'
+                            WHEN d.ai_pending AND d.status = 'done' THEN 'WAITING' ELSE 'NONE' END
+                FROM document d WHERE d.id = ?
+                """).param(id).query(String.class).optional().map(Analysis::valueOf).orElse(Analysis.NONE);
+    }
+
+    /** Die Dokumente aus der Auswahl, die auf das Sprachmodell warten oder gerade analysiert werden. */
+    public Set<Long> analysing(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(jdbc.sql("""
+                SELECT id FROM document WHERE id = ANY(?) AND (ai_pending AND status = 'done'
+                    OR id = (SELECT current_document_id FROM ai_status WHERE id = 1))
+                """).param(ids.toArray(Long[]::new)).query(Long.class).list());
+    }
+
+    /** Ist das Dokument noch vorgemerkt? Wer es inzwischen gespeichert hat, will keine Vorschläge mehr. */
+    public boolean stillWaiting(long id) {
+        return jdbc.sql("SELECT ai_pending FROM document WHERE id = ?").param(id).query(Boolean.class).optional()
+                .orElse(false);
+    }
+
+    public void analysisStarted(long id) {
+        jdbc.sql("UPDATE ai_status SET current_document_id = ?, current_since = now() WHERE id = 1").param(id).update();
+    }
+
+    public void analysisFinished() {
+        jdbc.sql("UPDATE ai_status SET current_document_id = NULL, current_since = NULL WHERE id = 1").update();
+    }
+
     public void learned(int documents) {
         jdbc.sql("UPDATE ai_status SET learned_at = now(), learned_documents = ? WHERE id = 1").param(documents)
                 .update();

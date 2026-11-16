@@ -40,9 +40,11 @@ import de.documan.domain.Document;
 import de.documan.domain.MasterItem;
 import de.documan.domain.MasterKind;
 import de.documan.repo.ActivityRepository;
+import de.documan.repo.AiRepository;
 import de.documan.repo.DocumentRepository;
 import de.documan.repo.MasterRepository;
 import de.documan.repo.Selection;
+import de.documan.repo.WorkerRequestRepository;
 import de.documan.service.CategoryPaths;
 import de.documan.service.DocumentService;
 import de.documan.service.Filters;
@@ -96,11 +98,17 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
     private Div bulk;
     private Span bulkCount;
     private Button selectAllInBar;
+    private final AiRepository ai;
+    private final WorkerRequestRepository requests;
+    private Set<Long> analysing = Set.of();
     private ComboBox<String> bulkValue;
     private Select<Action> bulkAction;
 
     public DocumentsView(DocumentRepository documents, DocumentService service, MasterRepository master,
-            Filters filters, SearchService search, ActivityRepository activities, Fmt fmt) {
+            Filters filters, SearchService search, ActivityRepository activities, Fmt fmt, AiRepository ai,
+            WorkerRequestRepository requests) {
+        this.ai = ai;
+        this.requests = requests;
         this.documents = documents;
         this.service = service;
         this.master = master;
@@ -203,6 +211,13 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
             add(chips);
         }
         Div line = Ui.div("result-line select-line");
+        if ("inbox".equals(params.first("view"))) {
+            line.add(Ui.button("Eingangsordner einlesen", () -> {
+                requests.request(WorkerRequestRepository.CONSUME, username);
+                Ui.info("Die Eingangsordner werden jetzt eingelesen. Neue Dokumente erscheinen nach der Verarbeitung "
+                        + "im Eingang.");
+            }));
+        }
         if (!query.isEmpty() || !applied.active().isEmpty()) {
             line.add(new Span(count + " Treffer"));
         }
@@ -226,6 +241,7 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
         if ("list".equals(VaadinSession.getCurrent().getAttribute(LAYOUT))) {
             docs.addClassName("as-list");
         }
+        analysing = ai.analysing(list.stream().map(Document::id).toList());
         list.forEach(document -> docs.add(card(document)));
         add(docs);
 
@@ -352,12 +368,17 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
         });
         boxes.add(box);
         Div check = Ui.div("doc-check", box);
-        card.add(check, cardLink(document, fmt));
+        card.add(check, cardLink(document, fmt, analysing.contains(document.id())));
         return card;
     }
 
     /** Vorschaubild, Titel, Absender, Datum und Tags eines Dokuments, verlinkt auf seine Seite. */
     static Anchor cardLink(Document document, Fmt fmt) {
+        return cardLink(document, fmt, false);
+    }
+
+    /** Wie cardLink, mit analysing zeigt die Karte, dass die KI-Analyse noch läuft oder wartet. */
+    static Anchor cardLink(Document document, Fmt fmt, boolean analysing) {
         Div sheet = Ui.div("doc-sheet");
         if (document.hasThumbnail()) {
             Image thumbnail = new Image("dokumente/" + document.id() + "/bild?v=" + document.version(), "");
@@ -371,6 +392,9 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
         }
         if (!document.isFinished()) {
             sheet.add(Ui.span("doc-badge waiting", document.status().label()));
+        }
+        if (analysing) {
+            sheet.add(Ui.span("doc-badge waiting", "KI-Analyse"));
         }
         if (document.isDone() && document.inbox()) {
             Span fresh = Ui.span("doc-new", "");

@@ -160,6 +160,7 @@ public class AiAssignmentService {
             return false;
         }
         long id = next.get();
+        ai.analysisStarted(id);
         try {
             Optional<Document> document = documents.find(id);
             if (document.isPresent()) {
@@ -177,6 +178,8 @@ public class AiAssignmentService {
             ai.modelFailed("#" + id + ": " + error.getMessage());
             log.warn("Sprachmodell konnte #{} nicht zuordnen: {}", id, error.toString());
             ai.languageModelDone(id);
+        } finally {
+            ai.analysisFinished();
         }
         return true;
     }
@@ -208,6 +211,11 @@ public class AiAssignmentService {
                 + "Dateiname: " + document.originalFilename() + "\n"
                 + "Text des Dokuments:\n" + cut(ai.content(document.id()), PROMPT_TEXT);
         JsonNode answer = ollama.ask(system, user, schema());
+        if (!ai.stillWaiting(document.id())) {
+            // Inzwischen gespeichert: Die Angaben gelten als bestätigt, die KI ergänzt nichts mehr.
+            return;
+        }
+        document = documents.find(document.id()).orElse(document);
 
         int assigned = 0;
         String sender = answer.path("absender").asString("").strip();

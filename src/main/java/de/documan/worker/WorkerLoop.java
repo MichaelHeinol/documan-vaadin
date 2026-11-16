@@ -18,6 +18,7 @@ import de.documan.service.InboxWatchers;
 import de.documan.service.IngestService;
 import de.documan.service.PipelineService;
 import de.documan.service.StorageService;
+import de.documan.repo.WorkerRequestRepository;
 import de.documan.service.ai.AiAssignmentService;
 import de.documan.service.backup.BackupService;
 import de.documan.service.mail.MailImportService;
@@ -49,12 +50,15 @@ public class WorkerLoop implements SmartLifecycle {
     private final StorageService storage;
     private final DailyReportService dailyReport;
     private final AiAssignmentService ai;
+    private final WorkerRequestRepository requests;
     private volatile boolean stopping;
     private Thread thread;
 
     public WorkerLoop(DocuManProperties properties, PipelineService pipeline, MailImportService mail,
             BackupService backup, IngestService ingest, FilingService filing, InboxFolder inbox,
-            StorageService storage, DailyReportService dailyReport, AiAssignmentService ai) {
+            StorageService storage, DailyReportService dailyReport, AiAssignmentService ai,
+            WorkerRequestRepository requests) {
+        this.requests = requests;
         this.ai = ai;
         this.properties = properties;
         this.pipeline = pipeline;
@@ -132,7 +136,14 @@ public class WorkerLoop implements SmartLifecycle {
             boolean busy;
             try {
                 long now = System.nanoTime();
-                if (now - nextScan >= 0) {
+                if (requests.pending(WorkerRequestRepository.CONSUME)) {
+                    // Von Hand angestoßen: sofort einlesen, was lange genug unverändert ist.
+                    int imported = watchers.scan(inbox.watchedPaths(), true);
+                    requests.handled(WorkerRequestRepository.CONSUME, imported == 1 ? "1 Datei übernommen"
+                            : imported + " Dateien übernommen");
+                    log.info("Eingangsordner von Hand eingelesen: {} Datei(en)", imported);
+                    nextScan = now + scanInterval;
+                } else if (now - nextScan >= 0) {
                     watchers.scan(inbox.watchedPaths());
                     nextScan = now + scanInterval;
                 }

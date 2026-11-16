@@ -146,7 +146,9 @@ an, ausgelesene Texte als Text. Alle anderen Formate öffnet DocuMan nie im Brow
 bereit. Eine Datei, die sich `.pdf` oder `.jpg` nennt, aber etwas anderes enthält, wird als `.bin` abgelegt.
 
 Die Eingangsordner werden alle 10 Sekunden geprüft. Eine Datei wird erst übernommen, wenn sie sich
-10 Sekunden nicht mehr verändert hat, damit Scanner in Ruhe schreiben können. Danach wird sie aus
+10 Sekunden nicht mehr verändert hat, damit Scanner in Ruhe schreiben können. Wer nicht warten will, liest die
+Ordner mit „Eingangsordner einlesen“ im Eingang oder „Jetzt einlesen“ auf der Seite Eingangsordner sofort ein.
+Dann gilt eine Datei schon als fertig, wenn sie seit 10 Sekunden nicht mehr geändert wurde. Danach wird sie aus
 dem Ordner entfernt. Duplikate landen dort in `_abgelehnt/`, leere Dateien bleiben liegen.
 Leere Unterordner räumt DocuMan ebenfalls weg. Hat DocuMan den Ordner selbst geleert, verschwindet er,
 sobald er 10 Sekunden leer geblieben ist. Andere leere Ordner, etwa frisch angelegte oder ältere Reste,
@@ -327,6 +329,10 @@ Das Modell lädt DocuMan beim ersten Aufruf selbst herunter. Das Sprachmodell ko
 neue Dokumente warten nicht darauf. Ist Ollama nicht erreichbar, versucht DocuMan es nach fünf Minuten
 erneut, die Dokumente bleiben so lange vorgemerkt. Auf einem PC muss Ollama Verbindungen aus dem Netz annehmen
 (`OLLAMA_HOST=0.0.0.0`).
+
+**Status:** Solange das Sprachmodell ein Dokument noch vor sich hat oder gerade analysiert, zeigen Karte
+und Detailseite „KI-Analyse“ beziehungsweise „KI-Analyse läuft“. Sobald es fertig ist, erscheinen die
+ergänzten Angaben von selbst. Wer vorher speichert, behält das Dokument, wie es ist.
 
 **Markierung und Bestätigung:** Was die KI gesetzt hat, ist am Dokument mit **KI** markiert. Speichern Sie
 das Dokument oder legen Sie es ab, gelten die Angaben als bestätigt. Erst dann lernt DocuMan daraus, so

@@ -26,6 +26,11 @@ public class InboxWatchers {
     }
 
     public int scan(List<Path> roots) {
+        return scan(roots, false);
+    }
+
+    /** Mit manual liest jeder Ordner sofort ein, was lange genug unverändert ist, siehe FolderWatcher. */
+    public int scan(List<Path> roots, boolean manual) {
         Map<Path, FolderWatcher> current = new LinkedHashMap<>();
         for (Path root : roots) {
             FolderWatcher watcher = watchers.get(root);
@@ -38,7 +43,7 @@ public class InboxWatchers {
         watchers = current;
         int imported = 0;
         for (FolderWatcher watcher : current.values()) {
-            imported += watcher.scan();
+            imported += watcher.scan(manual);
         }
         return imported;
     }

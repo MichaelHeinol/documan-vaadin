@@ -93,7 +93,9 @@ public abstract class IntegrationTest {
                          consume_folder, storage_usage, daily_report, import_rejection RESTART IDENTITY CASCADE
                 """).update();
         jdbc.sql("UPDATE ai_status SET learned_at = NULL, learned_documents = 0, model_ok_at = NULL, model_error = '', "
-                + "model_error_at = NULL, assigned = 0").update();
+                + "model_error_at = NULL, assigned = 0, current_document_id = NULL, current_since = NULL").update();
+        jdbc.sql("UPDATE worker_request SET requested_at = NULL, requested_by = '', handled_at = NULL, result = ''")
+                .update();
         // So steht es nach der Einrichtung in der Datenbank.
         jdbc.sql("INSERT INTO consume_folder (folder) VALUES ('eingang')").update();
     }

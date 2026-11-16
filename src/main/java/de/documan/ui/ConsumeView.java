@@ -14,9 +14,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import de.documan.config.AccountConfig;
+import de.documan.repo.WorkerRequestRepository;
 import de.documan.service.InboxFolder;
 import de.documan.service.InboxFolder.Status;
 import de.documan.service.InboxFolderException;
+import de.documan.web.Fmt;
 import jakarta.annotation.security.RolesAllowed;
 
 /** Die überwachten Eingangsordner: Zustand, wartende und abgelehnte Dateien, hinzufügen und entfernen. */
@@ -28,11 +30,20 @@ public class ConsumeView extends Div implements Refreshable {
     private final InboxFolder inbox;
     private final Div confirm = new Div();
     private final UnorderedList list = new UnorderedList();
+    private final WorkerRequestRepository requests;
+    private final Fmt fmt;
+    private final Div requestState = new Div();
 
-    public ConsumeView(InboxFolder inbox) {
+    public ConsumeView(InboxFolder inbox, WorkerRequestRepository requests, Fmt fmt) {
         this.inbox = inbox;
+        this.requests = requests;
+        this.fmt = fmt;
         Header head = new Header(new Div(new H1("Eingangsordner"), new Paragraph("Was hier landet, importiert DocuMan "
-                + "automatisch und entfernt es danach aus dem Ordner.")));
+                + "automatisch und entfernt es danach aus dem Ordner.")), Ui.primary("Jetzt einlesen", () -> {
+                    requests.request(WorkerRequestRepository.CONSUME, Ui.username());
+                    Ui.info("Die Eingangsordner werden jetzt eingelesen.");
+                    showRequest();
+                }));
         head.setClassName("page-head");
         list.setClassName("consume-list");
         Section section = new Section();
@@ -45,13 +56,26 @@ public class ConsumeView extends Div implements Refreshable {
                         + "erreichbar sein, zum Beispiel für Ihren Scanner. Ordner dürfen nicht ineinander liegen. Geprüft "
                         + "wird alle 10 Sekunden. Wer einen Ordner nicht mehr überwacht, findet die Dateien darin "
                         + "unverändert vor.</p>"));
-        add(head, confirm, section);
+        add(head, requestState, confirm, section);
         refresh();
+    }
+
+    /** Stand des von Hand angestoßenen Einlesens. Der Worker erledigt es, die Seite aktualisiert sich danach. */
+    private void showRequest() {
+        requestState.removeAll();
+        WorkerRequestRepository.Request request = requests.find(WorkerRequestRepository.CONSUME);
+        if (request.pending()) {
+            requestState.add(Ui.paragraph("status-note", "Einlesen angefordert, der Worker liest die Ordner gleich ein."));
+        } else if (request.handledAt() != null) {
+            requestState.add(Ui.paragraph("help", "Zuletzt von Hand eingelesen: " + fmt.dateTime(request.handledAt())
+                    + ", " + request.result() + "."));
+        }
     }
 
     @Override
     public void refresh() {
         list.removeAll();
+        showRequest();
         var folders = inbox.status();
         for (Status folder : folders) {
             DescriptionList facts = new DescriptionList();
