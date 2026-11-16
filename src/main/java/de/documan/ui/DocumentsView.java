@@ -95,6 +95,7 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
     private Section docs;
     private Div bulk;
     private Span bulkCount;
+    private Button selectAllInBar;
     private ComboBox<String> bulkValue;
     private Select<Action> bulkAction;
 
@@ -201,8 +202,16 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
             });
             add(chips);
         }
+        Div line = Ui.div("result-line select-line");
         if (!query.isEmpty() || !applied.active().isEmpty()) {
-            add(Ui.paragraph("result-line", count + " Treffer"));
+            line.add(new Span(count + " Treffer"));
+        }
+        if (!list.isEmpty()) {
+            line.add(Ui.button(pages > 1 ? "Alle " + list.size() + " auf dieser Seite auswählen"
+                    : "Alle " + list.size() + " auswählen", this::selectAll));
+        }
+        if (line.getComponentCount() > 0) {
+            add(line);
         }
 
         String view = params.first("view");
@@ -436,6 +445,12 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
         return actions;
     }
 
+    /** Wählt alle angezeigten Dokumente dieser Seite aus. */
+    private void selectAll() {
+        boxes.forEach(box -> box.setValue(true));
+        updateBulk();
+    }
+
     private Div bulkBar() {
         bulkCount = Ui.span("bulk-count", "");
         bulkCount.getElement().setAttribute("aria-live", "polite");
@@ -444,6 +459,7 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
             boxes.forEach(box -> box.setValue(false));
             updateBulk();
         });
+        selectAllInBar = Ui.button("Alle auswählen", this::selectAll);
         bulkAction = new Select<>();
         bulkAction.setAriaLabel("Aktion");
         bulkAction.setItems(actions());
@@ -455,7 +471,7 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
         bulkValue.addCustomValueSetListener(custom -> bulkValue.setValue(custom.getDetail()));
         bulkAction.addValueChangeListener(change -> updateValueField());
         Button apply = Ui.primary("Anwenden", this::applyBulk);
-        bulk = Ui.div("bulk", bulkCount, clear, bulkAction, bulkValue, apply);
+        bulk = Ui.div("bulk", bulkCount, selectAllInBar, clear, bulkAction, bulkValue, apply);
         updateValueField();
         updateBulk();
         return bulk;
@@ -490,6 +506,7 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
             docs.setClassName("selecting", !selected.isEmpty());
         }
         bulkCount.setText(selected.size() + " ausgewählt");
+        selectAllInBar.setVisible(selected.size() < boxes.size());
     }
 
     private void applyBulk() {
@@ -512,6 +529,13 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
 
     private void runBulk(String action, String value) {
         List<Long> ids = List.copyOf(selected);
+        // Was gerade verarbeitet wird, bleibt unverändert. Löschen und erneutes Verarbeiten prüfen das selbst.
+        int skipped = 0;
+        if (!action.equals("delete") && !action.equals("reprocess")) {
+            List<Long> finished = documents.finishedIds(ids);
+            skipped = ids.size() - finished.size();
+            ids = finished;
+        }
         Long[] array = ids.toArray(Long[]::new);
         int count = ids.size();
         switch (action) {
@@ -565,6 +589,9 @@ public class DocumentsView extends Div implements BeforeEnterObserver, HasDynami
             default -> {
                 return;
             }
+        }
+        if (skipped > 0) {
+            Ui.warning(skipped + " Dokument(e) werden gerade verarbeitet und blieben unverändert.");
         }
         selected.clear();
         MainLayout.current().ifPresentOrElse(MainLayout::refreshNow, this::render);

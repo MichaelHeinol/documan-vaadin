@@ -178,8 +178,8 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
             note.add(Ui.secondary("Erneut verarbeiten", this::reprocess));
             side.add(note);
         } else if (!document.isFinished()) {
-            side.add(Ui.div("status-note",
-                    new Span(document.status().label() + ": Text und Vorschau erscheinen automatisch.")));
+            side.add(Ui.div("status-note", new Span(document.status().label() + ": Text und Vorschau erscheinen "
+                    + "automatisch. Bis dahin lassen sich die Angaben nicht bearbeiten.")));
         }
 
         side.add(form());
@@ -254,6 +254,11 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
         }
         Div form = Ui.div("form-stack", field(title), Ui.div("form-row", field(correspondent), field(documentType)),
                 field(category), field(date), field(tags), field(newTags), field(addedBy), field(notes), actions);
+        if (!document.isFinished()) {
+            // Während der (erneuten) Verarbeitung bleiben die Angaben, wie sie sind.
+            fields.forEach(field -> field.setReadOnly(true));
+            actions.setEnabled(false);
+        }
         if (aiNote != null) {
             form.addComponentAsFirst(aiNote);
         }
@@ -367,6 +372,10 @@ public class DocumentView extends Div implements BeforeEnterObserver, HasDynamic
     }
 
     private void save(String action) {
+        if (!documents.find(document.id()).map(Document::isFinished).orElse(false)) {
+            Ui.warning("Das Dokument wird gerade verarbeitet. Die Angaben lassen sich danach wieder bearbeiten.");
+            return;
+        }
         boolean valid = true;
         String newTitle = text(title);
         title.setInvalid(false);

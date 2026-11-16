@@ -199,6 +199,9 @@ kbd {
 .mono { font-family: var(--mono); font-size: 13px; }
 .strong { font-weight: 650; color: var(--ink); }
 .rejection-detail { display: block; margin-top: 2px; color: var(--ink-3); font-size: 13px; overflow-wrap: anywhere; }
+.form-fieldset { display: contents; margin: 0; padding: 0; border: 0; min-width: 0; }
+.form-fieldset:disabled :is(input, select, textarea, button, .tag-picker label) { opacity: .6; cursor: not-allowed; }
+.select-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ai-status { display: grid; gap: 8px; }
 .ai-status p { margin: 0; }
 .ai-badge {

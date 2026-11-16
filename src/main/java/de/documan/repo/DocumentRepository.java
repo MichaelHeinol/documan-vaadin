@@ -379,6 +379,15 @@ public class DocumentRepository {
                 .param(ids).update();
     }
 
+    /** Die Dokumente aus der Auswahl, die fertig verarbeitet sind. Nur deren Angaben dürfen sich ändern. */
+    public List<Long> finishedIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql("SELECT id FROM document WHERE id = ANY(?) AND status IN ('done', 'failed') ORDER BY id")
+                .param(ids.toArray(Long[]::new)).query(Long.class).list();
+    }
+
     public int requeue(Long[] ids) {
         return jdbc.sql("""
                 UPDATE document SET status = 'pending', error = '', attempts = 0

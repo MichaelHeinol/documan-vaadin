@@ -277,6 +277,9 @@ Die Adresse merkt sich die Wahl, etwa `/ordner?nach=typ` oder `/ordner?nach=abse
 **Stapelbearbeitung:** In der Dokumentliste wählen Sie mehrere Dokumente aus und legen sie ab, setzen
 Absendername, Typ, Kategorie oder Tags, übernehmen fehlgeschlagene, verarbeiten sie erneut oder löschen sie.
 Bei „Kategorie setzen“ nimmt ein leeres Feld die eigene Kategorie weg, dann gilt die des Dokumenttyps.
+„Alle auswählen“ über der Liste wählt alle angezeigten Dokumente der Seite aus, im Eingang etwa alle neuen auf
+einmal. Während ein Dokument verarbeitet wird, auch erneut, lassen sich seine Angaben nicht bearbeiten. Die
+Detailseite zeigt sie gesperrt an, die Stapelbearbeitung lässt solche Dokumente aus und sagt, wie viele.
 
 **Automatische Zuordnung:** Bei Absendernamen, Dokumenttypen und Tags lassen sich Suchbegriffe
 hinterlegen. Passen mehrere Absendernamen, gewinnt der Begriff, der am weitesten oben im Text
