@@ -90,6 +90,34 @@ public class AiRepository {
                 .query(String.class).optional().orElse("");
     }
 
+    /** Ein zugeordnetes Dokument als Beispiel für das Sprachmodell, nur mit bestätigten Werten. */
+    public record Example(long id, String filename, String excerpt, Long correspondentId, Long typeId,
+            Long categoryId, Set<Long> tagIds) {
+    }
+
+    /** Die Beispiele in der Reihenfolge der ids, mit dem Textanfang in der gegebenen Länge. */
+    public List<Example> examples(List<Long> ids, int excerpt) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        List<Example> found = jdbc.sql("""
+                SELECT d.id, d.original_filename, left(d.content, ?) AS excerpt,
+                       CASE WHEN position('correspondent' IN d.ai_fields) = 0 THEN d.correspondent_id END AS correspondent_id,
+                       CASE WHEN position('type' IN d.ai_fields) = 0 THEN d.document_type_id END AS document_type_id,
+                       CASE WHEN position('category' IN d.ai_fields) = 0 THEN d.category_id END AS category_id,
+                       ARRAY(SELECT link.tag_id FROM document_tag link
+                             WHERE link.document_id = d.id AND NOT link.by_ai) AS tag_ids
+                FROM document d WHERE d.id = ANY(?)
+                """)
+                .params(excerpt, ids.toArray(Long[]::new))
+                .query((row, index) -> new Example(row.getLong("id"), row.getString("original_filename"),
+                        row.getString("excerpt"), Rows.nullableLong(row, "correspondent_id"),
+                        Rows.nullableLong(row, "document_type_id"), Rows.nullableLong(row, "category_id"),
+                        ids(row.getArray("tag_ids"))))
+                .list();
+        return ids.stream().flatMap(id -> found.stream().filter(example -> example.id() == id)).toList();
+    }
+
     private void mark(long id, String field) {
         jdbc.sql("""
                 UPDATE document SET ai_fields = CASE WHEN ai_fields = '' THEN ? ELSE ai_fields || ',' || ? END
@@ -192,6 +220,11 @@ public class AiRepository {
 
     public void languageModelDone(long id) {
         jdbc.sql("UPDATE document SET ai_pending = false WHERE id = ?").param(id).update();
+    }
+
+    /** Ist kein Sprachmodell mehr eingerichtet, wartet kein Dokument mehr darauf. Gibt die Anzahl zurück. */
+    public int forgetLanguageModel() {
+        return jdbc.sql("UPDATE document SET ai_pending = false WHERE ai_pending").update();
     }
 
     public long waitingForLanguageModel() {

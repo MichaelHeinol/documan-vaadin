@@ -156,29 +156,44 @@ public final class LearnedModel {
 
     /** Vorschlag für einen Text. Das Dokument selbst (exceptId) zählt nicht als Nachbar. */
     public Prediction predict(String text, long exceptId) {
-        if (examples.size() < MIN_DOCUMENTS || text == null || text.isBlank()) {
+        if (examples.size() < MIN_DOCUMENTS) {
             return Prediction.NONE;
         }
-        Vector vector = vector(counts(text));
-        if (vector.terms().length == 0) {
-            return Prediction.NONE;
-        }
-        Map<Integer, Float> query = new HashMap<>();
-        for (int position = 0; position < vector.terms().length; position++) {
-            query.put(vector.terms()[position], vector.weights()[position]);
-        }
-        List<Neighbour> neighbours = examples.stream()
-                .filter(example -> example.id() != exceptId)
-                .map(example -> new Neighbour(example, similarity(query, example.vector())))
-                .filter(neighbour -> neighbour.similarity() >= MIN_SIMILARITY)
-                .sorted(Comparator.comparingDouble(Neighbour::similarity).reversed())
-                .limit(NEIGHBOURS)
-                .toList();
+        List<Neighbour> neighbours = neighbours(text, exceptId, NEIGHBOURS);
         if (neighbours.isEmpty()) {
             return Prediction.NONE;
         }
         return new Prediction(vote(neighbours, Example::correspondentId), vote(neighbours, Example::typeId),
                 vote(neighbours, Example::categoryId), tags(neighbours));
+    }
+
+    /**
+     * Die ähnlichsten zugeordneten Dokumente, das ähnlichste zuerst. Das Sprachmodell bekommt sie als Beispiele,
+     * wie in diesem Archiv abgelegt wird.
+     */
+    public List<Long> similar(String text, long exceptId, int limit) {
+        return neighbours(text, exceptId, limit).stream().map(neighbour -> neighbour.example().id()).toList();
+    }
+
+    private List<Neighbour> neighbours(String text, long exceptId, int limit) {
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+        Vector vector = vector(counts(text));
+        if (vector.terms().length == 0) {
+            return List.of();
+        }
+        Map<Integer, Float> query = new HashMap<>();
+        for (int position = 0; position < vector.terms().length; position++) {
+            query.put(vector.terms()[position], vector.weights()[position]);
+        }
+        return examples.stream()
+                .filter(example -> example.id() != exceptId)
+                .map(example -> new Neighbour(example, similarity(query, example.vector())))
+                .filter(neighbour -> neighbour.similarity() >= MIN_SIMILARITY)
+                .sorted(Comparator.comparingDouble(Neighbour::similarity).reversed())
+                .limit(limit)
+                .toList();
     }
 
     /** Der Wert mit den meisten gewichteten Stimmen, wenn er klar genug vorn liegt. */

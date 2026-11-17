@@ -51,6 +51,7 @@ public class DocuManProperties {
     private String ollamaUrl = "";
     private String ollamaModel = "qwen2.5:3b";
     private int ollamaTimeoutSeconds = 600;
+    private int ollamaContext = 8192;
 
     private String dbHost;
     private int dbPort = 5432;
@@ -351,6 +352,15 @@ public class DocuManProperties {
 
     public void setOllamaTimeoutSeconds(int ollamaTimeoutSeconds) {
         this.ollamaTimeoutSeconds = ollamaTimeoutSeconds;
+    }
+
+    /** Kontextfenster des Sprachmodells in Token (OLLAMA_CONTEXT). Ist es zu klein, schneidet Ollama die Anfrage still ab. */
+    public int getOllamaContext() {
+        return ollamaContext;
+    }
+
+    public void setOllamaContext(int ollamaContext) {
+        this.ollamaContext = Math.max(2048, ollamaContext);
     }
 
     public String getDbHost() {

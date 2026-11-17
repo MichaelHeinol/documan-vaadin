@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -76,17 +77,25 @@ public class OllamaClient {
      * Fragt das Modell und gibt seine Antwort als JSON zurück. Das Schema legt fest, welche Felder sie hat.
      */
     public JsonNode ask(String system, String user, Map<String, Object> schema) throws IOException {
-        Map<String, Object> body = Map.of(
-                "model", properties.getOllamaModel(),
-                "stream", false,
-                "format", schema,
-                "options", Map.of("temperature", 0),
-                "messages", List.of(Map.of("role", "system", "content", system),
-                        Map.of("role", "user", "content", user)));
+        // think=false: Modelle wie qwen3 antworten sonst erst nach langem Nachdenken. num_ctx: Ohne Angabe nimmt
+        // Ollama ein kleines Fenster und schneidet längere Anfragen vorn ab, dann fehlen dem Modell die Anweisungen.
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", properties.getOllamaModel());
+        body.put("stream", false);
+        body.put("think", false);
+        body.put("format", schema);
+        body.put("options", Map.of("temperature", 0, "num_ctx", properties.getOllamaContext()));
+        body.put("messages", List.of(Map.of("role", "system", "content", system),
+                Map.of("role", "user", "content", user)));
         Duration timeout = Duration.ofSeconds(properties.getOllamaTimeoutSeconds());
         HttpResponse<String> response = post("/api/chat", body, timeout);
         if (response.statusCode() == 404 && response.body().contains("not found")) {
             pull();
+            response = post("/api/chat", body, timeout);
+        }
+        if (response.statusCode() == 400 && response.body().contains("thinking")) {
+            // Manche Ollama-Fassungen lehnen think bei Modellen ohne Denkmodus ab.
+            body.remove("think");
             response = post("/api/chat", body, timeout);
         }
         if (response.statusCode() != 200) {
@@ -100,10 +109,21 @@ public class OllamaClient {
             throw new UnavailableException("Ollama antwortet unverständlich: " + abbreviate(response.body()));
         }
         try {
-            return JSON.readTree(content);
+            return JSON.readTree(json(content));
         } catch (JacksonException invalid) {
             throw new IOException("Antwort des Modells ist kein JSON: " + abbreviate(content));
         }
+    }
+
+    /**
+     * Das JSON-Objekt aus der Antwort. Manche Modelle stellen trotz Schema Überlegungen ({@code <think>…</think>})
+     * oder einen Markdown-Rahmen davor.
+     */
+    static String json(String content) {
+        String text = content.replaceAll("(?s)<think>.*?</think>", "").strip();
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+        return start >= 0 && end > start ? text.substring(start, end + 1) : text;
     }
 
     /** Lädt das Modell auf den Ollama-Server. */

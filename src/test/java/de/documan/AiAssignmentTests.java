@@ -37,6 +37,7 @@ class AiAssignmentTests extends IntegrationTest {
     private HttpServer server;
     private final AtomicReference<String> answer = new AtomicReference<>();
     private final AtomicReference<String> request = new AtomicReference<>();
+    private volatile boolean rejectThinking;
 
     @BeforeEach
     void enableLearning() {
@@ -137,6 +138,14 @@ class AiAssignmentTests extends IntegrationTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/api/chat", exchange -> {
             request.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            if (rejectThinking && request.get().contains("\"think\"")) {
+                byte[] refusal = "{\"error\":\"\\\"qwen2.5:3b\\\" does not support thinking\"}"
+                        .getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(400, refusal.length);
+                exchange.getResponseBody().write(refusal);
+                exchange.close();
+                return;
+            }
             String content = answer.get().replace("\\", "\\\\").replace("\"", "\\\"");
             byte[] body = ("{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"},\"done\":true}")
                     .getBytes(StandardCharsets.UTF_8);
@@ -174,6 +183,70 @@ class AiAssignmentTests extends IntegrationTest {
         assertThat(request.get()).contains("Rechnung der Neue Firma GmbH").contains("Finanzen / Bank");
         assertThat(ai.status().modelOkAt()).isNotNull();
         assertThat(aiAssignment.languageModelNext()).isFalse();
+    }
+
+    @Test
+    void theLanguageModelSeesHowSimilarDocumentsWereFiled() throws IOException {
+        examples();
+        ollama("{\"absender\":\"\",\"dokumenttyp\":\"\",\"kategorie\":\"\",\"tags\":[],\"datum\":\"2026-04-01\"}");
+        Document fresh = document("scan").content(POWER + " Monat 4 Nachzahlung").create();
+
+        aiAssignment.afterProcessing(fresh.id());
+        assertThat(aiAssignment.languageModelNext()).isTrue();
+
+        assertThat(request.get()).contains("Beispiele, so sind ähnliche Dokumente in diesem Archiv abgelegt")
+                .contains("absender=Stadtwerke Musterstadt; dokumenttyp=Rechnung").contains("tags=Strom")
+                .doesNotContain("absender=Radiologie Brühl")
+                .contains("\"num_ctx\":8192").contains("\"think\":false");
+        assertThat(reload(fresh).documentDate()).isEqualTo(LocalDate.of(2026, 4, 1));
+    }
+
+    @Test
+    void withoutLearningThereAreNoExamples() throws IOException {
+        examples();
+        properties.setAiLearning(false);
+        ollama("{\"absender\":\"\",\"dokumenttyp\":\"\",\"kategorie\":\"\",\"tags\":[],\"datum\":\"\"}");
+        Document fresh = document("scan").content(POWER).create();
+        aiAssignment.afterProcessing(fresh.id());
+        assertThat(aiAssignment.languageModelNext()).isTrue();
+        assertThat(request.get()).doesNotContain("Beispiele, so sind");
+    }
+
+    @Test
+    void reasoningBeforeTheAnswerIsIgnored() throws IOException {
+        properties.setAiLearning(false);
+        documentType("Rechnung");
+        ollama("<think>Das ist wohl eine Rechnung.</think> ```json {\"absender\":\"\",\"dokumenttyp\":\"Rechnung\","
+                + "\"kategorie\":\"\",\"tags\":[],\"datum\":\"\"} ```");
+        Document fresh = document("scan").content("Rechnung Nummer 17").create();
+        aiAssignment.afterProcessing(fresh.id());
+        assertThat(aiAssignment.languageModelNext()).isTrue();
+        assertThat(reload(fresh).documentTypeName()).isEqualTo("Rechnung");
+    }
+
+    @Test
+    void anOllamaThatRefusesThinkIsAskedAgainWithoutIt() throws IOException {
+        properties.setAiLearning(false);
+        documentType("Rechnung");
+        rejectThinking = true;
+        ollama("{\"absender\":\"\",\"dokumenttyp\":\"Rechnung\",\"kategorie\":\"\",\"tags\":[],\"datum\":\"\"}");
+        Document fresh = document("scan").content("Rechnung Nummer 18").create();
+        aiAssignment.afterProcessing(fresh.id());
+        assertThat(aiAssignment.languageModelNext()).isTrue();
+        assertThat(reload(fresh).documentTypeName()).isEqualTo("Rechnung");
+        assertThat(request.get()).doesNotContain("\"think\"");
+        assertThat(ai.status().modelError()).isNullOrEmpty();
+    }
+
+    @Test
+    void withoutOllamaNothingWaitsForTheLanguageModel() {
+        Document waiting = document("Wartet").create();
+        ai.requestLanguageModel(waiting.id());
+        assertThat(ai.analysis(waiting.id())).isEqualTo(AiRepository.Analysis.WAITING);
+
+        assertThat(aiAssignment.languageModelNext()).isFalse();
+        assertThat(ai.analysis(waiting.id())).isEqualTo(AiRepository.Analysis.NONE);
+        assertThat(ai.waitingForLanguageModel()).isZero();
     }
 
     @Test

@@ -328,7 +328,25 @@ OLLAMA_MODEL=qwen2.5:3b
 Das Modell lädt DocuMan beim ersten Aufruf selbst herunter. Das Sprachmodell kommt im Worker immer zuletzt,
 neue Dokumente warten nicht darauf. Ist Ollama nicht erreichbar, versucht DocuMan es nach fünf Minuten
 erneut, die Dokumente bleiben so lange vorgemerkt. Auf einem PC muss Ollama Verbindungen aus dem Netz annehmen
-(`OLLAMA_HOST=0.0.0.0`).
+(`OLLAMA_HOST=0.0.0.0`). Wird `OLLAMA_URL` wieder geleert, warten vorgemerkte Dokumente nicht mehr auf das
+Sprachmodell.
+
+**Wie das Sprachmodell besser wird:** Ist die lernende Zuordnung an, bekommt das Sprachmodell zu jedem Dokument
+die drei ähnlichsten schon abgelegten Dokumente als Beispiel, mit Textanfang und Ihrer bestätigten Zuordnung.
+So legt es ab wie Sie, statt nur zu raten. Je mehr Dokumente bestätigt sind, desto treffsicherer wird es.
+Daneben zählt das Modell: Größere Modelle erkennen deutlich mehr, brauchen aber mehr Arbeitsspeicher und Zeit.
+
+| Modell | Arbeitsspeicher | Eignung |
+|---|---|---|
+| `qwen2.5:3b` | etwa 3 GB | schwache Rechner, einfache Briefe |
+| `qwen2.5:7b` | etwa 6 GB | guter Mittelweg |
+| `qwen2.5:14b` oder `gemma3:12b` | etwa 10 GB | deutlich treffsicherer, ab 16 GB Arbeitsspeicher |
+
+Modelle, die vor der Antwort nachdenken (etwa `qwen3`), fragt DocuMan ohne Nachdenken, das spart viel Zeit.
+`OLLAMA_CONTEXT` (Standard 8192 Token) legt fest, wie viel Text das Modell auf einmal sieht. Dokumenttext,
+die Listen der Stammdaten und die Beispiele müssen hineinpassen, sonst schneidet Ollama die Anfrage ab. Bei
+sehr vielen Absendern, Kategorien oder Tags hilft ein größerer Wert, etwa 16384, der aber mehr Arbeitsspeicher
+braucht.
 
 **Status:** Solange das Sprachmodell ein Dokument noch vor sich hat oder gerade analysiert, zeigen Karte
 und Detailseite „KI-Analyse“ beziehungsweise „KI-Analyse läuft“. Sobald es fertig ist, erscheinen die

@@ -50,6 +50,9 @@ public class AiAssignmentService {
     private static final int PROMPT_NAMES = 300;
     private static final int MAX_TAGS = 5;
     private static final int MAX_NEW_NAME = 100;
+    /** So viele ähnliche, schon abgelegte Dokumente bekommt das Sprachmodell als Beispiel. */
+    private static final int EXAMPLES = 3;
+    private static final int EXAMPLE_TEXT = 700;
 
     private final DocuManProperties properties;
     private final AiRepository ai;
@@ -62,6 +65,7 @@ public class AiAssignmentService {
     private long learnedAt;
     // null: kein Fehler, sonst der Zeitpunkt (System.nanoTime) des nächsten Versuchs.
     private Long retryAfter;
+    private boolean pendingForgotten;
 
     public AiAssignmentService(DocuManProperties properties, AiRepository ai, DocumentRepository documents,
             MasterRepository master, Reindexer reindexer, OllamaClient ollama) {
@@ -95,6 +99,7 @@ public class AiAssignmentService {
         model = null;
         modelStamp = "";
         retryAfter = null;
+        pendingForgotten = false;
     }
 
     /** Direkt nach der Verarbeitung: lernende Zuordnung, danach bei Bedarf das Sprachmodell vormerken. */
@@ -152,7 +157,19 @@ public class AiAssignmentService {
      * Ollama fehlt oder nach einem Fehler noch gewartet wird.
      */
     public boolean languageModelNext() {
-        if (!ollama.configured() || retryAfter != null && System.nanoTime() - retryAfter < 0) {
+        if (!ollama.configured()) {
+            if (!pendingForgotten) {
+                // Ollama wurde abgeschaltet: Vorgemerkte Dokumente zeigten sonst für immer „Wartet auf die KI-Analyse“.
+                int forgotten = ai.forgetLanguageModel();
+                if (forgotten > 0) {
+                    log.info("Kein Sprachmodell eingerichtet, {} vorgemerkte Dokumente warten nicht mehr", forgotten);
+                }
+                pendingForgotten = true;
+            }
+            return false;
+        }
+        pendingForgotten = false;
+        if (retryAfter != null && System.nanoTime() - retryAfter < 0) {
             return false;
         }
         Optional<Long> next = ai.nextForLanguageModel();
@@ -203,13 +220,17 @@ public class AiAssignmentService {
                 kategorie: genau einer der Pfade aus der Liste der Kategorien oder leer.
                 tags: höchstens %d aus der Liste der Tags, keine neuen.
                 datum: das Belegdatum des Dokuments als JJJJ-MM-TT, kein Fälligkeits- oder Druckdatum, sonst leer.
+                Stehen Beispiele dabei, sind das ähnliche Dokumente, die in diesem Archiv schon abgelegt sind. Ordne
+                ein Dokument derselben Art und desselben Absenders genauso zu. Passt kein Beispiel, entscheide allein.
                 """.formatted(MAX_TAGS);
+        String content = ai.content(document.id());
         String user = "Bekannte Absender: " + names(correspondents) + "\n"
                 + "Dokumenttypen: " + names(types) + "\n"
                 + "Kategorien: " + String.join("; ", categoryLabels.stream().limit(PROMPT_NAMES).toList()) + "\n"
                 + "Tags: " + names(tags) + "\n\n"
+                + examples(document.id(), content, correspondents, types, tags, paths)
                 + "Dateiname: " + document.originalFilename() + "\n"
-                + "Text des Dokuments:\n" + cut(ai.content(document.id()), PROMPT_TEXT);
+                + "Text des Dokuments:\n" + cut(content, PROMPT_TEXT);
         JsonNode answer = ollama.ask(system, user, schema());
         if (!ai.stillWaiting(document.id())) {
             // Inzwischen gespeichert: Die Angaben gelten als bestätigt, die KI ergänzt nichts mehr.
@@ -251,6 +272,42 @@ public class AiAssignmentService {
             assigned++;
         }
         changed(document.id(), assigned);
+    }
+
+    /**
+     * Die ähnlichsten schon abgelegten Dokumente mit ihrer bestätigten Zuordnung. So lernt das Sprachmodell, wie
+     * in diesem Archiv abgelegt wird, statt nur zu raten. Nur mit eingeschalteter lernender Zuordnung.
+     */
+    private String examples(long id, String content, List<MasterItem> correspondents, List<MasterItem> types,
+            List<MasterItem> tags, CategoryPaths paths) {
+        if (!properties.isAiLearning()) {
+            return "";
+        }
+        List<AiRepository.Example> examples = ai.examples(model().similar(content, id, EXAMPLES), EXAMPLE_TEXT);
+        if (examples.isEmpty()) {
+            return "";
+        }
+        Map<Long, String> categories = new LinkedHashMap<>();
+        paths.ordered().forEach(entry -> categories.put(entry.getKey(), entry.getValue()));
+        StringBuilder text = new StringBuilder("Beispiele, so sind ähnliche Dokumente in diesem Archiv abgelegt:\n");
+        int number = 0;
+        for (AiRepository.Example example : examples) {
+            List<String> tagNames = example.tagIds().stream().map(tag -> name(tags, tag))
+                    .filter(name -> !name.isEmpty()).toList();
+            text.append("--- Beispiel ").append(++number).append(" ---\n")
+                    .append("Dateiname: ").append(example.filename()).append('\n')
+                    .append("Textanfang: ").append(example.excerpt().replaceAll("\\s+", " ").strip()).append('\n')
+                    .append("Zuordnung: absender=").append(name(correspondents, example.correspondentId()))
+                    .append("; dokumenttyp=").append(name(types, example.typeId()))
+                    .append("; kategorie=").append(categories.getOrDefault(example.categoryId(), ""))
+                    .append("; tags=").append(String.join(", ", tagNames)).append('\n');
+        }
+        return text.append("--- Ende der Beispiele ---\n\n").toString();
+    }
+
+    private static String name(List<MasterItem> items, Long id) {
+        return id == null ? "" : items.stream().filter(item -> item.id() == id).map(MasterItem::name).findFirst()
+                .orElse("");
     }
 
     private static Map<String, Object> schema() {
