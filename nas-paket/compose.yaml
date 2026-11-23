@@ -45,7 +45,8 @@ services:
     volumes:
       - ${DB_DIR:-documan_vaadin_db}:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U documan -d documan"]
+      # Über TCP: Beim ersten Einrichten läuft kurz ein Hilfsserver nur am Socket, der gilt so nicht als bereit.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U documan -d documan"]
       interval: 5s
       timeout: 3s
       retries: 20
