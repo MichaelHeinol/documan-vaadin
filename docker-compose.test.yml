@@ -4,8 +4,10 @@ name: documan-vaadin-test
 
 services:
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
+      # Wie im Betrieb: Daten direkt in diesem Ordner.
+      PGDATA: /var/lib/postgresql/data
       POSTGRES_DB: documan
       POSTGRES_USER: documan
       POSTGRES_PASSWORD: test

@@ -592,6 +592,44 @@ Die Java-Prozesse begrenzen `WEB_HEAP_MB` und `WORKER_HEAP_MB` in `.env`. Die OC
 davon. Der Worker liest Bilder beim Umwandeln in PDF in seinen Speicher: Scheitern sehr große Scans,
 erhöhen Sie `WORKER_HEAP_MB`.
 
+### Umstieg auf PostgreSQL 18
+
+DocuMan nutzt PostgreSQL 18. Eine Datenbank der Version 17 übernimmt PostgreSQL 18 nicht von selbst. Mit
+der neuen `compose.yaml` startet `db` dann nicht und meldet im Protokoll, die Daten stammten von Version 17.
+Die Daten bleiben dabei unangetastet. So ziehen Sie sie um, im Projektordner (auf der Synology in einer
+SSH-Sitzung, mit `sudo` vor `docker`):
+
+1. Mit der bisherigen `compose.yaml` die Datenbank sichern:
+
+   ```bash
+   docker compose up -d --wait db
+   docker compose exec -T db pg_dump -U documan -d documan --format=custom > documan-pg17.dump
+   docker compose down
+   ```
+
+2. Den alten Datenordner beiseitelegen, bei `DB_DIR=./data/postgres` etwa so:
+
+   ```bash
+   mv data/postgres data/postgres-17
+   mkdir data/postgres
+   ```
+
+   Ohne `DB_DIR` liegt die Datenbank im Docker-Volume `documan-vaadin_documan_vaadin_db`. Löschen Sie es erst, wenn
+   `documan-pg17.dump` vorliegt und nicht leer ist: `docker volume rm documan-vaadin_documan_vaadin_db`.
+
+3. Die neue `compose.yaml` einspielen, die Datenbank neu anlegen und die Sicherung einspielen:
+
+   ```bash
+   docker compose pull
+   docker compose up -d --wait db
+   docker compose exec -T db pg_restore -U documan -d documan --no-owner --exit-on-error < documan-pg17.dump
+   docker compose up -d
+   ```
+
+Läuft DocuMan danach mit allen Dokumenten, können `data/postgres-17` und `documan-pg17.dump` weg. Die
+Sicherungen von DocuMan selbst lassen sich in beiden Versionen wiederherstellen, die Werkzeuge im Image
+sind Version 18 und arbeiten auch mit einer Datenbank der Version 17.
+
 ### Sicherheit
 
 DocuMan ist für das Heimnetz gedacht und spricht selbst nur HTTP. Stellen Sie den Port nicht direkt ins

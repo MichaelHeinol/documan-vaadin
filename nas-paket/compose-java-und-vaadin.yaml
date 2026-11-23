@@ -47,9 +47,12 @@ x-healthcheck: &healthcheck
 # danach als von Hand gestoppt, und Docker startet sie beim Hochfahren nicht wieder; always startet sie trotzdem.
 services:
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: always
     environment:
+      # Daten wie bis Version 17 direkt in diesem Ordner. Liegen dort noch Daten einer älteren Version,
+      # startet die Datenbank nicht, statt leer neu anzufangen. Umstieg: siehe README.
+      PGDATA: /var/lib/postgresql/data
       POSTGRES_DB: documan
       POSTGRES_USER: documan
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt in .env}

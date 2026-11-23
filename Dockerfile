@@ -3,15 +3,21 @@ FROM python:3.13-slim-trixie AS tools
 
 # Weitere OCR-Sprachen beim Bauen ergänzen, z. B. TESSERACT_LANGS="deu eng fra"
 ARG TESSERACT_LANGS="deu eng"
+# pg_dump muss mindestens so neu sein wie der Datenbankserver. Die Werkzeuge kommen deshalb aus dem
+# Repository des PostgreSQL-Projekts statt aus Debian. Version 18 sichert auch Server der Version 17.
+ARG POSTGRES_CLIENT=18
 
-RUN apt-get update \
+RUN python -c "import urllib.request; urllib.request.urlretrieve('https://www.postgresql.org/media/keys/ACCC4CF8.asc', '/usr/share/keyrings/pgdg.asc')" \
+ && echo "deb [signed-by=/usr/share/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list \
+ && apt-get update \
  && apt-get install -y --no-install-recommends \
       file \
       catdoc \
       ghostscript \
       pngquant \
       poppler-utils \
-      postgresql-client \
+      postgresql-client-$POSTGRES_CLIENT \
       tesseract-ocr \
       tesseract-ocr-osd \
       $(for lang in $TESSERACT_LANGS; do echo "tesseract-ocr-$lang"; done) \
