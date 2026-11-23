@@ -94,8 +94,12 @@ docker push mikeheinoldock/documan-vaadin:latest
 Nach einem Neustart des NAS startet DocuMan von selbst. Die Synology startet die Container dabei einzeln
 und lehnt jeden ab, dessen Abhängigkeit noch nicht läuft. `nas-paket/compose.yaml` kommt deshalb ohne
 `depends_on` aus, stattdessen wartet DocuMan beim Start selbst bis zu fünf Minuten auf die Datenbank.
-Bleiben nach einem Neustart `web` und `worker` aus, stammt die `compose.yaml` im Projektordner noch aus
-der Zeit davor: Ersetzen Sie sie durch die aktuelle Fassung und erstellen Sie das Projekt neu.
+Beim Herunterfahren stoppt DSM jeden Container einzeln, Docker hält sie danach für von Hand gestoppt.
+Die Container haben deshalb `restart: always`: Docker startet sie beim Hochfahren selbst, auch wenn DSM nur
+einen Teil davon startet. Einen Container, den Sie in DSM von Hand anhalten, startet Docker nach dem nächsten
+Neustart des NAS ebenfalls wieder. Bleiben nach einem Neustart `web` und `worker` aus, stammt die
+`compose.yaml` im Projektordner noch aus der Zeit davor: Ersetzen Sie sie durch die aktuelle Fassung und
+erstellen Sie das Projekt neu.
 
 Diese Fassung bindet `/volume1` ein, damit Sie den Zielordner der Datensicherung in der Oberfläche
 wählen können. DocuMan erreicht dort alles, worauf der Benutzer aus `PUID` Zugriff hat. Wer das

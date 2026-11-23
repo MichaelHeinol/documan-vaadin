@@ -4,7 +4,7 @@ name: documan-vaadin
 x-app: &app
   image: mikeheinoldock/documan-vaadin:latest
   pull_policy: always
-  restart: unless-stopped
+  restart: always
   user: "${PUID:-1000}:${PGID:-1000}"
   env_file: .env
   environment: &app-environment
@@ -28,10 +28,12 @@ x-app: &app
 
 # Ohne depends_on: Synology startet beim Hochfahren die Container einzeln und lehnt jeden ab, dessen
 # Abhängigkeit noch nicht läuft. DocuMan wartet stattdessen selbst auf die Datenbank.
+# restart: always, weil DSM beim Herunterfahren jeden Container einzeln stoppt. Mit unless-stopped gelten sie
+# danach als von Hand gestoppt, und Docker startet sie beim Hochfahren nicht wieder; always startet sie trotzdem.
 services:
   db:
     image: postgres:17-alpine
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_DB: documan
       POSTGRES_USER: documan
@@ -74,7 +76,7 @@ services:
   # Grafikkarte langsam (oft über eine Minute je Dokument). Das Modell lädt DocuMan beim ersten Mal selbst.
   # ollama:
   #   image: ollama/ollama:latest
-  #   restart: unless-stopped
+  #   restart: always
   #   volumes:
   #     - ${DATA_DIR:-./data}/ollama:/root/.ollama
 
