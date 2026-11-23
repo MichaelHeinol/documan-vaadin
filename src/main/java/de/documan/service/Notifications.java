@@ -2,10 +2,13 @@ package de.documan.service;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,6 +41,10 @@ public class Notifications {
         SENT, NOT_CONFIGURED, FAILED
     }
 
+    /** Eine angehängte Datei, etwa die Kurzanleitung als PDF. */
+    public record Attachment(String filename, String mimeType, byte[] content) {
+    }
+
     public record Result(Delivery delivery, String problem) {
 
         public boolean sent() {
@@ -50,12 +57,16 @@ public class Notifications {
     private static final String SECURITY_SSL = "ssl";
     private static final String SECURITY_NONE = "none";
     public static final String USERNAME_LABEL = "Ihr Benutzername:";
+    public static final String INBOX_LABEL = "Ihr Eingangsordner für Scans und PDFs:";
+    public static final String INBOXES_LABEL = "Ihre Eingangsordner für Scans und PDFs:";
     private static final Pattern LINK = Pattern.compile("https?://[^\\s<]+");
 
     private final DocuManProperties properties;
+    private final UserGuide guide;
 
-    public Notifications(DocuManProperties properties) {
+    public Notifications(DocuManProperties properties, UserGuide guide) {
         this.properties = properties;
+        this.guide = guide;
     }
 
     private Properties transportProperties() {
@@ -93,10 +104,18 @@ public class Notifications {
 
     /** Dieselbe Nachricht als HTML. Links sind anklickbar, der Benutzername steht fett. */
     public static String asHtml(String text, String username) {
+        return asHtml(text, username, List.of());
+    }
+
+    /** Wie oben, dazu stehen die angegebenen ganzen Zeilen fett, etwa die Eingangsordner. */
+    public static String asHtml(String text, String username, Collection<String> emphasized) {
+        Set<String> strong = new HashSet<>(emphasized);
         List<String> paragraphs = new ArrayList<>();
         for (String block : text.strip().split("\n\n")) {
             List<String> lines = List.of(block.split("\n", -1)).stream()
-                    .map(line -> LINK.matcher(HtmlUtils.htmlEscape(line, "UTF-8")).replaceAll(Notifications::anchor))
+                    .map(line -> strong.contains(line)
+                            ? "<strong>" + HtmlUtils.htmlEscape(line, "UTF-8") + "</strong>"
+                            : LINK.matcher(HtmlUtils.htmlEscape(line, "UTF-8")).replaceAll(Notifications::anchor))
                     .toList();
             paragraphs.add("<p>" + String.join("<br>", lines) + "</p>");
         }
@@ -130,6 +149,12 @@ public class Notifications {
      * @param images Content-ID → PNG
      */
     public Result sendHtml(String recipient, String subject, String text, String html, Map<String, byte[]> images) {
+        return sendHtml(recipient, subject, text, html, images, List.of());
+    }
+
+    /** Wie sendHtml, dazu Dateien als Anhang. */
+    public Result sendHtml(String recipient, String subject, String text, String html, Map<String, byte[]> images,
+            List<Attachment> attachments) {
         if (properties.getEmailHost().isEmpty()) {
             return new Result(Delivery.NOT_CONFIGURED, "Der E-Mail-Versand ist nicht eingerichtet (EMAIL_HOST in der .env).");
         }
@@ -145,9 +170,8 @@ public class Notifications {
             MimeMultipart alternatives = new MimeMultipart("alternative");
             alternatives.addBodyPart(plain);
             alternatives.addBodyPart(markup);
-            if (images.isEmpty()) {
-                message.setContent(alternatives);
-            } else {
+            MimeMultipart content = alternatives;
+            if (!images.isEmpty()) {
                 MimeBodyPart body = new MimeBodyPart();
                 body.setContent(alternatives);
                 MimeMultipart related = new MimeMultipart("related");
@@ -160,8 +184,24 @@ public class Notifications {
                     part.setFileName(image.getKey() + ".png");
                     related.addBodyPart(part);
                 }
-                message.setContent(related);
+                content = related;
             }
+            if (!attachments.isEmpty()) {
+                MimeBodyPart body = new MimeBodyPart();
+                body.setContent(content);
+                MimeMultipart mixed = new MimeMultipart("mixed");
+                mixed.addBodyPart(body);
+                for (Attachment attachment : attachments) {
+                    MimeBodyPart part = new MimeBodyPart();
+                    part.setDataHandler(new DataHandler(
+                            new ByteArrayDataSource(attachment.content(), attachment.mimeType())));
+                    part.setFileName(attachment.filename());
+                    part.setDisposition(Part.ATTACHMENT);
+                    mixed.addBodyPart(part);
+                }
+                content = mixed;
+            }
+            message.setContent(content);
             if (properties.getEmailHostUser().isEmpty()) {
                 Transport.send(message);
             } else {
@@ -179,7 +219,7 @@ public class Notifications {
     }
 
     public Result confirmRegistration(String username, String email, String link) {
-        return send(email, "Ihr Konto bei DocuMan aktivieren", """
+        return welcome(email, "Ihr Konto bei DocuMan aktivieren", """
                 Hallo %s,
 
                 bitte aktivieren Sie Ihr neues Konto bei DocuMan.
@@ -192,6 +232,32 @@ public class Notifications {
 
                 Der Link gilt 48 Stunden. Haben Sie kein Konto angelegt, ignorieren Sie diese Nachricht.
                 """.formatted(username, USERNAME_LABEL, username, link), username);
+    }
+
+    /**
+     * Eine Begrüßung an einen neuen Benutzer: Sie nennt die Eingangsordner und hängt die Kurzanleitung an. Lässt
+     * sich die Anleitung nicht erzeugen, geht die Nachricht ohne sie hinaus.
+     */
+    private Result welcome(String recipient, String subject, String text, String username) {
+        List<String> folders = List.of();
+        List<Attachment> attachments = new ArrayList<>();
+        try {
+            folders = guide.inboxFolders();
+            attachments.add(new Attachment(UserGuide.FILENAME, "application/pdf", guide.pdf()));
+        } catch (RuntimeException error) {
+            log.warn("Kurzanleitung nicht erzeugt, die Begrüßung geht ohne sie hinaus: {}", error.toString());
+        }
+        StringBuilder full = new StringBuilder(text.strip()).append("\n\n");
+        if (!folders.isEmpty()) {
+            full.append(folders.size() > 1 ? INBOXES_LABEL : INBOX_LABEL).append('\n')
+                    .append(String.join("\n", folders)).append("\n\n")
+                    .append("Was Sie dort ablegen, übernimmt DocuMan von selbst.\n\n");
+        }
+        if (!attachments.isEmpty()) {
+            full.append("Im Anhang finden Sie eine Kurzanleitung als PDF.\n");
+        }
+        String body = full.toString().strip() + "\n";
+        return sendHtml(recipient, subject, body, asHtml(body, username, folders), Map.of(), attachments);
     }
 
     public Result confirmEmail(String username, String email, String link) {
@@ -208,7 +274,7 @@ public class Notifications {
 
     /** Meldet einem Benutzer seinen Zugang. Sein Passwort legt er über den Link selbst fest. */
     public Result accessCreated(AppUser user, String link) {
-        return send(user.email(), "Ihr Zugang zu DocuMan", """
+        return welcome(user.email(), "Ihr Zugang zu DocuMan", """
                 Hallo %s,
 
                 für Sie wurde ein Zugang zu DocuMan eingerichtet.

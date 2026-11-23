@@ -500,6 +500,12 @@ wirkt nur einmal. Scheitert der Versand, bleibt der Benutzer bestehen und die Se
 der Benutzerliste verschickt „Zugangsmail senden“ einen neuen Link. Ohne Mailversand vergeben Sie das
 Passwort beim Bearbeiten des Benutzers.
 
+Die Zugangsmail und die Mail zur Aktivierung einer Registrierung nennen den Eingangsordner und bringen eine
+**Kurzanleitung für Benutzer** als PDF mit (`DocuMan-Kurzanleitung.pdf`). Sie erklärt Anmelden, Einreichen,
+den Eingang, die Suche und „Fehlerhafte Importe“. Oben steht farbig hervorgehoben der Eingangsordner, so wie
+Benutzer ihn im Netz finden: Mit `CONSUME_SHARE` in der `.env`, etwa `\\NAS\scan`, steht dort dieser Pfad,
+sonst der Pfad auf dem NAS. Weitere überwachte Ordner stehen darunter.
+
 Den Versand richten Sie in `.env` ein:
 
 | Variable | Bedeutung |
@@ -510,6 +516,7 @@ Den Versand richten Sie in `.env` ein:
 | `EMAIL_SECURITY` | `starttls`, `ssl` oder `none` |
 | `EMAIL_HOST_USER` | Benutzername am SMTP-Server |
 | `EMAIL_HOST_PASSWORD` | Passwort am SMTP-Server |
+| `CONSUME_SHARE` | Netzwerkpfad des Eingangsordners für die Kurzanleitung, etwa `\\NAS\scan` |
 | `EMAIL_FROM` | Absender, ohne Angabe der Benutzername am SMTP-Server |
 | `DAILY_REPORT_TIME` | Uhrzeit der täglichen Übersicht beim ersten Start, Standard 07:00, leer: zunächst aus. Danach gilt die Seite „Übersichtsmail“ |
 

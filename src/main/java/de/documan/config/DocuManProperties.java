@@ -36,6 +36,7 @@ public class DocuManProperties {
     private Path backupDir;
     // Nur zur Anzeige: Wo die Ordner auf dem NAS liegen, weiß das Programm im Container sonst nicht.
     private String consumeHostDir = "";
+    private String consumeShare = "";
     private String browseHostDir = "";
 
     private int consumePollSeconds = 10;
@@ -246,6 +247,15 @@ public class DocuManProperties {
 
     public void setConsumeHostDir(String consumeHostDir) {
         this.consumeHostDir = consumeHostDir;
+    }
+
+    /** So erreichen Benutzer den Eingangsordner im Netz (CONSUME_SHARE), etwa \\NAS\scan. Steht in der Kurzanleitung. */
+    public String getConsumeShare() {
+        return consumeShare;
+    }
+
+    public void setConsumeShare(String consumeShare) {
+        this.consumeShare = consumeShare == null ? "" : consumeShare.strip();
     }
 
     public String getBrowseHostDir() {
