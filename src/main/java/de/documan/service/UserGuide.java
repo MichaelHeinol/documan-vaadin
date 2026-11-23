@@ -7,6 +7,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,13 +19,17 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.springframework.stereotype.Service;
 
 import de.documan.config.DocuManProperties;
 
 /**
- * Kurzanleitung für Benutzer als PDF. Sie hängt an der Begrüßungsmail und nennt hervorgehoben den
- * Eingangsordner dieser Installation, über den die meisten Dokumente hereinkommen.
+ * Persönliche Kurzanleitung für Benutzer als PDF. Sie hängt an der Begrüßungsmail, spricht den Benutzer mit
+ * Namen an, nennt seine Anmeldung mit anklickbarem Link und hebt den Eingangsordner dieser Installation hervor,
+ * über den die meisten Dokumente hereinkommen.
  */
 @Service
 public class UserGuide {
@@ -61,22 +67,33 @@ public class UserGuide {
         return folders;
     }
 
-    public byte[] pdf() {
+    /** Die Anmeldeseite, leer ohne SITE_URL. */
+    public String loginUrl() {
+        String site = properties.getSiteUrl().replaceAll("/+$", "");
+        return site.isEmpty() ? "" : site + "/login";
+    }
+
+    /**
+     * Die Anleitung für einen bestimmten Benutzer: Sie spricht ihn mit Namen an und nennt seine Anmeldung mit
+     * anklickbarem Link.
+     *
+     * @param username der Benutzername für die Anmeldung
+     * @param name     so wird der Benutzer angesprochen, etwa sein Vorname; leer heißt Benutzername
+     */
+    public byte[] pdf(String username, String name) {
         List<String> folders = inboxFolders();
+        String greeting = name == null || name.isBlank() ? username : name.strip();
+        String today = LocalDate.now(properties.getTimeZone()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         try (PDDocument document = new PDDocument()) {
-            document.getDocumentInformation().setTitle(TITLE);
+            document.getDocumentInformation().setTitle(TITLE + " für " + greeting);
             document.getDocumentInformation().setAuthor("DocuMan");
             try (Writer page = new Writer(document)) {
-                page.title(TITLE);
-                page.paragraph("Für Benutzer: Dokumente einreichen, prüfen und wiederfinden.", Writer.MUTED);
+                page.title("Willkommen bei DocuMan, " + greeting + "!");
+                page.paragraph("Ihre persönliche Kurzanleitung, erstellt am " + today, Writer.MUTED);
+                page.paragraph("Schön, dass Sie dabei sind! Hier steht alles, was Sie für den Anfang brauchen: wie "
+                        + "Sie sich anmelden, wohin Ihre Dokumente gehören und wie Sie sie wiederfinden.", Writer.INK);
+                page.login(username, loginUrl());
                 page.inbox(folders);
-
-                page.heading("Anmelden");
-                String site = properties.getSiteUrl().replaceAll("/+$", "");
-                page.paragraph("Öffnen Sie DocuMan im Browser" + (site.isEmpty() ? "" : " unter " + site)
-                        + " und melden Sie sich mit Ihrem Benutzernamen und Ihrem Passwort an. Ihr Passwort legen "
-                        + "Sie über den Link in der Begrüßungsmail selbst fest. Haben Sie es vergessen, fordern Sie "
-                        + "auf der Anmeldeseite unter „Passwort vergessen?“ einen neuen Link an.", Writer.INK);
 
                 page.heading("Weitere Wege für neue Dokumente");
                 page.bullet("Hochladen: Über „Hochladen“ oben rechts wählen Sie Dateien von Ihrem Rechner oder "
@@ -110,6 +127,10 @@ public class UserGuide {
                 page.heading("Ihr Konto");
                 page.paragraph("Unter „Mein Konto“ ändern Sie Ihr Passwort, Ihre E-Mail-Adresse und die "
                         + "Darstellung.", Writer.INK);
+
+                page.paragraph("", Writer.INK);
+                page.paragraph("Viel Freude mit Ihrem Archiv, " + greeting + "! Bei Fragen hilft Ihnen Ihr "
+                        + "Administrator gern weiter.", Writer.ACCENT);
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             document.save(out);
@@ -124,7 +145,9 @@ public class UserGuide {
 
         static final Color INK = new Color(0x1F2937);
         static final Color MUTED = new Color(0x4B5563);
-        private static final Color ACCENT = new Color(0x1D4ED8);
+        static final Color ACCENT = new Color(0x1D4ED8);
+        private static final Color LOGIN_FILL = new Color(0xDBEAFE);
+        private static final Color LOGIN_TEXT = new Color(0x1E3A8A);
         private static final Color BOX_FILL = new Color(0xFEF3C7);
         private static final Color BOX_BORDER = new Color(0xD97706);
         private static final Color FOLDER = new Color(0x7C2D12);
@@ -140,6 +163,7 @@ public class UserGuide {
         private static final PDFont MONO = new PDType1Font(Standard14Fonts.FontName.COURIER_BOLD);
 
         private final PDDocument document;
+        private PDPage page;
         private PDPageContentStream content;
         private float y;
 
@@ -152,7 +176,7 @@ public class UserGuide {
             if (content != null) {
                 content.close();
             }
-            PDPage page = new PDPage(PAGE);
+            page = new PDPage(PAGE);
             document.addPage(page);
             content = new PDPageContentStream(document, page);
             y = PAGE.getHeight() - MARGIN;
@@ -223,9 +247,11 @@ public class UserGuide {
         }
 
         void title(String text) throws IOException {
-            y -= 22;
-            show(text, BOLD, 22, ACCENT, MARGIN, y);
-            y -= 10;
+            for (String line : wrap(text, BOLD, 20, WIDTH)) {
+                y -= 24;
+                show(line, BOLD, 20, ACCENT, MARGIN, y);
+            }
+            y -= 8;
         }
 
         void heading(String text) throws IOException {
@@ -257,55 +283,122 @@ public class UserGuide {
             y -= 4;
         }
 
-        /** Der Kasten mit dem Eingangsordner, farbig hinterlegt und in großer Schrift. */
-        void inbox(List<String> folders) throws IOException {
-            float inner = WIDTH - 2 * PADDING - 6;
-            float left = MARGIN + PADDING + 6;
-            String title = folders.size() > 1 ? "Ihre Eingangsordner" : "Ihr Eingangsordner";
-            List<String> paths = new ArrayList<>();
-            for (String folder : folders) {
-                paths.addAll(wrap(folder, MONO, 13, inner));
+        /** Eine Zeile in einem Kasten; mit Adresse wird sie anklickbar. */
+        private record Row(String text, PDFont font, float size, Color color, float advance, String url) {
+
+            static Row gap(float advance) {
+                return new Row("", REGULAR, SIZE, INK, advance, "");
             }
-            List<String> text = new ArrayList<>();
-            if (folders.isEmpty()) {
-                text.addAll(wrap("Welcher Ordner das ist, sagt Ihnen Ihr Administrator.", REGULAR, SIZE, inner));
+        }
+
+        private static float inner() {
+            return WIDTH - 2 * PADDING - 6;
+        }
+
+        private static void add(List<Row> rows, String text, PDFont font, float size, Color color, float advance,
+                String url) throws IOException {
+            for (String line : wrap(text, font, size, inner())) {
+                rows.add(new Row(line, font, size, color, advance, url));
             }
-            text.addAll(wrap("Legen Sie hier Scans, PDFs und Fotos von Dokumenten ab, am besten richten Sie Ihren "
-                    + "Scanner gleich auf " + (folders.size() > 1 ? "einen dieser Ordner" : "diesen Ordner")
-                    + " ein. DocuMan holt jede Datei nach wenigen Sekunden ab, erkennt den Text, auch in Scans, und "
-                    + "entfernt sie danach aus dem Ordner. Das Dokument finden Sie dann im Eingang.",
-                    REGULAR, SIZE, inner));
-            text.add("");
-            text.addAll(wrap("Geeignet sind PDF, JPG, PNG, TIFF und WebP sowie Textdateien. Was DocuMan nicht "
-                    + "übernehmen kann, legt es im Unterordner " + FolderWatcher.REJECTED_DIR + " ab, den Grund "
-                    + "zeigt die Seite „Fehlerhafte Importe“.", REGULAR, SIZE, inner));
-            float height = PADDING + 22 + paths.size() * 18 + 8 + text.size() * LEADING + PADDING;
+        }
+
+        private static void text(List<Row> rows, String text) throws IOException {
+            add(rows, text, REGULAR, SIZE, INK, LEADING, "");
+        }
+
+        /** Ein farbig hinterlegter Kasten mit Randleiste. */
+        private void box(List<Row> rows, Color fill, Color border) throws IOException {
+            float height = 2 * PADDING + 4;
+            for (Row row : rows) {
+                height += row.advance();
+            }
             y -= 18;
             ensure(height);
             float top = y;
-            content.setNonStrokingColor(BOX_FILL);
-            content.setStrokingColor(BOX_BORDER);
+            content.setNonStrokingColor(fill);
+            content.setStrokingColor(border);
             content.setLineWidth(1.2f);
             content.addRect(MARGIN, top - height, WIDTH, height);
             content.fillAndStroke();
-            content.setNonStrokingColor(BOX_BORDER);
+            content.setNonStrokingColor(border);
             content.addRect(MARGIN, top - height, 6, height);
             content.fill();
-            y = top - PADDING - 14;
-            show(title, BOLD, 14, FOLDER, left, y);
-            y -= 8;
-            for (String path : paths) {
-                y -= 18;
-                show(path, MONO, 13, FOLDER, left, y);
-            }
-            y -= 8;
-            for (String line : text) {
-                y -= LEADING;
-                if (!line.isEmpty()) {
-                    show(line, REGULAR, SIZE, INK, left, y);
+            float left = MARGIN + PADDING + 6;
+            y = top - PADDING + 2;
+            for (Row row : rows) {
+                y -= row.advance();
+                if (row.text().isEmpty()) {
+                    continue;
+                }
+                show(row.text(), row.font(), row.size(), row.color(), left, y);
+                if (!row.url().isEmpty()) {
+                    link(row, left);
                 }
             }
             y = top - height - 4;
+        }
+
+        /** Unterstreicht die Zeile und macht sie anklickbar. */
+        private void link(Row row, float left) throws IOException {
+            float lineWidth = width(row.text(), row.font(), row.size());
+            content.setStrokingColor(row.color());
+            content.setLineWidth(0.8f);
+            content.moveTo(left, y - 2);
+            content.lineTo(left + lineWidth, y - 2);
+            content.stroke();
+            PDActionURI action = new PDActionURI();
+            action.setURI(row.url());
+            PDBorderStyleDictionary border = new PDBorderStyleDictionary();
+            border.setWidth(0);
+            PDAnnotationLink annotation = new PDAnnotationLink();
+            annotation.setRectangle(new PDRectangle(left, y - 4, lineWidth, row.size() + 6));
+            annotation.setBorderStyle(border);
+            annotation.setAction(action);
+            page.getAnnotations().add(annotation);
+        }
+
+        /** Der Kasten mit der Anmeldung: Adresse als Link und Benutzername. */
+        void login(String username, String url) throws IOException {
+            List<Row> rows = new ArrayList<>();
+            add(rows, "Ihre Anmeldung", BOLD, 14, LOGIN_TEXT, 16, "");
+            rows.add(Row.gap(6));
+            if (url.isEmpty()) {
+                text(rows, "Die Adresse von DocuMan nennt Ihnen Ihr Administrator.");
+            } else {
+                add(rows, "Hier geht es zur Anmeldung:", REGULAR, SIZE, INK, LEADING, "");
+                add(rows, url, BOLD, 13, ACCENT, 18, url);
+            }
+            rows.add(Row.gap(4));
+            add(rows, "Ihr Benutzername:", REGULAR, SIZE, INK, LEADING, "");
+            add(rows, username, MONO, 13, LOGIN_TEXT, 18, "");
+            rows.add(Row.gap(6));
+            text(rows, "Ihr Passwort legen Sie zuerst über den Link in der Begrüßungsmail fest, danach melden Sie "
+                    + "sich hier an. Haben Sie es vergessen, fordern Sie auf der Anmeldeseite unter „Passwort "
+                    + "vergessen?“ einen neuen Link an.");
+            box(rows, LOGIN_FILL, ACCENT);
+        }
+
+        /** Der Kasten mit dem Eingangsordner, farbig hinterlegt und in großer Schrift. */
+        void inbox(List<String> folders) throws IOException {
+            List<Row> rows = new ArrayList<>();
+            add(rows, folders.size() > 1 ? "Ihre Eingangsordner" : "Ihr Eingangsordner", BOLD, 14, FOLDER, 16, "");
+            rows.add(Row.gap(8));
+            for (String folder : folders) {
+                add(rows, folder, MONO, 13, FOLDER, 18, "");
+            }
+            rows.add(Row.gap(8));
+            if (folders.isEmpty()) {
+                text(rows, "Welcher Ordner das ist, sagt Ihnen Ihr Administrator.");
+            }
+            text(rows, "Legen Sie hier Scans, PDFs und Fotos von Dokumenten ab, am besten richten Sie Ihren "
+                    + "Scanner gleich auf " + (folders.size() > 1 ? "einen dieser Ordner" : "diesen Ordner")
+                    + " ein. DocuMan holt jede Datei nach wenigen Sekunden ab, erkennt den Text, auch in Scans, und "
+                    + "entfernt sie danach aus dem Ordner. Das Dokument finden Sie dann im Eingang.");
+            rows.add(Row.gap(LEADING));
+            text(rows, "Geeignet sind PDF, JPG, PNG, TIFF und WebP sowie Textdateien. Was DocuMan nicht "
+                    + "übernehmen kann, legt es im Unterordner " + FolderWatcher.REJECTED_DIR + " ab, den Grund "
+                    + "zeigt die Seite „Fehlerhafte Importe“.");
+            box(rows, BOX_FILL, BOX_BORDER);
         }
 
         @Override

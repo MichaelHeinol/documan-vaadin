@@ -59,6 +59,8 @@ public class Notifications {
     public static final String USERNAME_LABEL = "Ihr Benutzername:";
     public static final String INBOX_LABEL = "Ihr Eingangsordner für Scans und PDFs:";
     public static final String INBOXES_LABEL = "Ihre Eingangsordner für Scans und PDFs:";
+    public static final String GUIDE_NOTE =
+            "Im Anhang finden Sie Ihre persönliche Kurzanleitung als PDF, mit dem Link zur Anmeldung.";
     private static final Pattern LINK = Pattern.compile("https?://[^\\s<]+");
 
     private final DocuManProperties properties;
@@ -231,19 +233,20 @@ public class Notifications {
                 %s
 
                 Der Link gilt 48 Stunden. Haben Sie kein Konto angelegt, ignorieren Sie diese Nachricht.
-                """.formatted(username, USERNAME_LABEL, username, link), username);
+                """.formatted(username, USERNAME_LABEL, username, link), username, username);
     }
 
     /**
-     * Eine Begrüßung an einen neuen Benutzer: Sie nennt die Eingangsordner und hängt die Kurzanleitung an. Lässt
-     * sich die Anleitung nicht erzeugen, geht die Nachricht ohne sie hinaus.
+     * Eine Begrüßung an einen neuen Benutzer: Sie nennt die Eingangsordner und hängt seine persönliche
+     * Kurzanleitung an. Die Anleitung spricht ihn mit name an, ohne Namen mit dem Benutzernamen. Lässt sich die
+     * Anleitung nicht erzeugen, geht die Nachricht ohne sie hinaus.
      */
-    private Result welcome(String recipient, String subject, String text, String username) {
+    private Result welcome(String recipient, String subject, String text, String username, String name) {
         List<String> folders = List.of();
         List<Attachment> attachments = new ArrayList<>();
         try {
             folders = guide.inboxFolders();
-            attachments.add(new Attachment(UserGuide.FILENAME, "application/pdf", guide.pdf()));
+            attachments.add(new Attachment(UserGuide.FILENAME, "application/pdf", guide.pdf(username, name)));
         } catch (RuntimeException error) {
             log.warn("Kurzanleitung nicht erzeugt, die Begrüßung geht ohne sie hinaus: {}", error.toString());
         }
@@ -254,7 +257,7 @@ public class Notifications {
                     .append("Was Sie dort ablegen, übernimmt DocuMan von selbst.\n\n");
         }
         if (!attachments.isEmpty()) {
-            full.append("Im Anhang finden Sie eine Kurzanleitung als PDF.\n");
+            full.append(GUIDE_NOTE).append('\n');
         }
         String body = full.toString().strip() + "\n";
         return sendHtml(recipient, subject, body, asHtml(body, username, folders), Map.of(), attachments);
@@ -288,7 +291,7 @@ public class Notifications {
                 Danach melden Sie sich mit Ihrem Benutzernamen und diesem Passwort an. Der Link gilt 2 Stunden \
                 und wirkt nur einmal. Ist er abgelaufen, fordern Sie auf der Anmeldeseite unter „Passwort vergessen?“ \
                 einen neuen an.
-                """.formatted(user.username(), USERNAME_LABEL, user.username(), link), user.username());
+                """.formatted(user.username(), USERNAME_LABEL, user.username(), link), user.username(), user.firstName());
     }
 
     public Result passwordReset(AppUser user, String link) {

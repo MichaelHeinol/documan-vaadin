@@ -505,9 +505,12 @@ der Benutzerliste verschickt „Zugangsmail senden“ einen neuen Link. Ohne Mai
 Passwort beim Bearbeiten des Benutzers.
 
 Die Zugangsmail und die Mail zur Aktivierung einer Registrierung nennen den Eingangsordner und bringen eine
-**Kurzanleitung für Benutzer** als PDF mit (`DocuMan-Kurzanleitung.pdf`). Sie erklärt Anmelden, Einreichen,
-den Eingang, die Suche und „Fehlerhafte Importe“. Oben steht farbig hervorgehoben der Eingangsordner, so wie
-Benutzer ihn im Netz finden: Mit `CONSUME_SHARE` in der `.env`, etwa `\\NAS\scan`, steht dort dieser Pfad,
+**persönliche Kurzanleitung** als PDF mit (`DocuMan-Kurzanleitung.pdf`). Sie begrüßt den Benutzer mit seinem
+Vornamen, ohne Vornamen mit dem Benutzernamen, und erklärt Anmelden, Einreichen, den Eingang, die Suche und
+„Fehlerhafte Importe“. Oben stehen zwei farbige Kästen: „Ihre Anmeldung“ mit dem Benutzernamen und einem
+anklickbaren Link zur Anmeldeseite (aus `SITE_URL`, ohne `SITE_URL` verweist sie an den Administrator), darunter
+der Eingangsordner, so wie Benutzer ihn im Netz finden:
+Mit `CONSUME_SHARE` in der `.env`, etwa `\\NAS\scan`, steht dort dieser Pfad,
 sonst der Pfad auf dem NAS. Weitere überwachte Ordner stehen darunter.
 
 Den Versand richten Sie in `.env` ein:

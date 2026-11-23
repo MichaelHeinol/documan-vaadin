@@ -5,9 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +33,7 @@ import jakarta.mail.BodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-/** Die Begrüßungsmail nennt den Eingangsordner und bringt eine Kurzanleitung als PDF mit. */
+/** Die Begrüßungsmail nennt den Eingangsordner und bringt eine persönliche Kurzanleitung als PDF mit. */
 class WelcomeGuideTests extends IntegrationTest {
 
     private static final String HOST_DIR = "/volume1/docker/documan/consume";
@@ -104,20 +110,70 @@ class WelcomeGuideTests extends IntegrationTest {
         }
     }
 
+    /** Die Ziele aller anklickbaren Links im PDF. */
+    private static List<String> linksOf(byte[] pdf) throws IOException {
+        List<String> links = new ArrayList<>();
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            for (PDPage page : document.getPages()) {
+                for (PDAnnotation annotation : page.getAnnotations()) {
+                    if (annotation instanceof PDAnnotationLink link && link.getAction() instanceof PDActionURI uri) {
+                        links.add(uri.getURI());
+                    }
+                }
+            }
+        }
+        return links;
+    }
+
     @Test
     void theWelcomeMailNamesTheInboxAndCarriesTheGuide() throws Exception {
         MimeMessage mail = welcome();
 
         assertThat(plainText(mail)).contains(Notifications.INBOX_LABEL + "\n" + HOST_DIR + "\n")
-                .contains("Im Anhang finden Sie eine Kurzanleitung als PDF.");
+                .contains(Notifications.GUIDE_NOTE);
         assertThat(mailPart(mail, "text/html")).contains("<strong>" + HOST_DIR + "</strong>")
                 .contains("Ihr Benutzername: <strong>lena</strong>");
         byte[] pdf = guideOf(mail);
         // Zum Ansehen nach dem Testlauf, target ist Build-Ausgabe.
         Files.write(Files.createDirectories(Path.of("target")).resolve("DocuMan-Kurzanleitung-Beispiel.pdf"), pdf);
         String guideText = textOf(pdf);
-        assertThat(guideText).contains(UserGuide.TITLE).contains("Ihr Eingangsordner").contains(HOST_DIR)
-                .contains("https://dms.example.de").contains("Ablegen und weiter").contains("Fehlerhafte Importe");
+        assertThat(guideText).contains("Willkommen bei DocuMan, lena!").contains("Ihre persönliche Kurzanleitung")
+                .contains("Ihre Anmeldung").contains("https://dms.example.de/login").contains("Ihr Benutzername:")
+                .contains("Ihr Eingangsordner").contains(HOST_DIR).contains("Ablegen und weiter")
+                .contains("Fehlerhafte Importe").contains("Viel Freude mit Ihrem Archiv, lena!");
+        // Die Anmeldung ist anklickbar.
+        assertThat(linksOf(pdf)).containsExactly("https://dms.example.de/login");
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            assertThat(document.getDocumentInformation().getTitle()).isEqualTo(UserGuide.TITLE + " für lena");
+        }
+    }
+
+    @Test
+    void theGuideUsesTheFirstNameWhenThereIsOne() throws Exception {
+        AppUser lena = lena();
+        users.setNames(lena.id(), "Lena", "Berger");
+        assertThat(notifications.accessCreated(users.findByUsername("lena").orElseThrow(),
+                "https://dms.example.de/zugang?token=x").sent()).isTrue();
+        String guideText = textOf(guideOf(server.getReceivedMessages()[0]));
+        assertThat(guideText).contains("Willkommen bei DocuMan, Lena!").contains("Viel Freude mit Ihrem Archiv, Lena!");
+        // Anmelden muss sie sich trotzdem mit dem Benutzernamen.
+        assertThat(guideText).containsPattern("Ihr Benutzername:\\s+lena");
+    }
+
+    @Test
+    void withoutSiteUrlTheGuideHasNoLink() throws Exception {
+        properties.setSiteUrl("");
+        byte[] pdf = guide.pdf("lena", "");
+        assertThat(textOf(pdf)).contains("Willkommen bei DocuMan, lena!")
+                .contains("Die Adresse von DocuMan nennt Ihnen Ihr Administrator.");
+        assertThat(linksOf(pdf)).isEmpty();
+        assertThat(guide.loginUrl()).isEmpty();
+    }
+
+    @Test
+    void aSiteUrlWithTrailingSlashesGivesOneLoginLink() {
+        properties.setSiteUrl("https://dms.example.de//");
+        assertThat(guide.loginUrl()).isEqualTo("https://dms.example.de/login");
     }
 
     @Test
@@ -142,8 +198,7 @@ class WelcomeGuideTests extends IntegrationTest {
     void withoutReachableFolderTheAdministratorIsNamed() throws Exception {
         properties.setConsumeDir(workspace.resolve("fehlt"));
         MimeMessage mail = welcome();
-        assertThat(plainText(mail)).doesNotContain(Notifications.INBOX_LABEL)
-                .contains("Im Anhang finden Sie eine Kurzanleitung als PDF.");
+        assertThat(plainText(mail)).doesNotContain(Notifications.INBOX_LABEL).contains(Notifications.GUIDE_NOTE);
         assertThat(textOf(guideOf(mail))).contains("sagt Ihnen Ihr Administrator");
     }
 
@@ -164,7 +219,7 @@ class WelcomeGuideTests extends IntegrationTest {
     @Test
     void unusualCharactersAndLongPathsDoNotBreakTheGuide() throws Exception {
         properties.setConsumeShare("\\\\NAS\\Ordner ✓ " + "sehr-langer-ordnername-".repeat(6));
-        String guideText = textOf(guide.pdf());
+        String guideText = textOf(guide.pdf("lena", "Lena"));
         // Der lange Name passt nicht mehr in die Zeile und wird umgebrochen.
         assertThat(guideText).contains("\\\\NAS\\Ordner ?").contains("sehr-langer-ordnername-sehr-langer");
     }
