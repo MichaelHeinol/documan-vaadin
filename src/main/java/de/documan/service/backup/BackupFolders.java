@@ -69,7 +69,7 @@ public class BackupFolders {
         }
     }
 
-    private static boolean isSameFolder(Path first, Path second) {
+    static boolean isSameFolder(Path first, Path second) {
         try {
             return Files.exists(first) && Files.isSameFile(first, second);
         } catch (IOException notComparable) {

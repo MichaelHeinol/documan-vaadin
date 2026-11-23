@@ -144,6 +144,30 @@ public class BackupService {
         return String.join("/", parts);
     }
 
+    /**
+     * Wie {@link #cleanFolder}, dazu ohne Umweg: Über die NAS-Einbindung ist der Sicherungsordner oft ein zweites
+     * Mal erreichbar, etwa als {@code nas/DocuMan}. Ein solcher Pfad wird auf den Sicherungsordner selbst
+     * zurückgeführt. Sonst sicherte DocuMan in sich selbst oder in den leeren Einhängepunkt, den Docker dort für
+     * {@code nas} anlegt und in den es nicht schreiben darf.
+     */
+    public String normalizeFolder(String input) {
+        String folder = cleanFolder(input);
+        Path root = properties.getBackupDir();
+        boolean shortened = true;
+        while (shortened && !folder.isEmpty()) {
+            shortened = false;
+            List<String> parts = List.of(folder.split("/"));
+            for (int length = parts.size(); length >= 1; length--) {
+                if (BackupFolders.isSameFolder(root.resolve(String.join("/", parts.subList(0, length))), root)) {
+                    folder = String.join("/", parts.subList(length, parts.size()));
+                    shortened = true;
+                    break;
+                }
+            }
+        }
+        return folder;
+    }
+
     public void checkWritable(String folder) {
         Path target = folders.target(folder);
         folders.checkOutsideData(target);
@@ -157,7 +181,7 @@ public class BackupService {
 
     /** Sichtbare Unterordner für die Auswahl des Zielordners. */
     public List<String> listFolders(String folder) {
-        Path target = folders.target(cleanFolder(folder));
+        Path target = folders.target(normalizeFolder(folder));
         try (Stream<Path> entries = Files.list(target)) {
             return entries.filter(path -> Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
                     .map(path -> path.getFileName().toString())
@@ -182,7 +206,7 @@ public class BackupService {
         } catch (IOException error) {
             throw new BackupException("Der Ordner kann nicht angelegt werden: " + reason(error), error);
         }
-        return folder;
+        return normalizeFolder(folder);
     }
 
     private static String reason(IOException error) {

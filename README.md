@@ -413,7 +413,10 @@ fehl, zeigt die Seitenleiste einen Hinweis.
 Auswahl stehen der Sicherungsordner aus `BACKUP_DIR` und mit `nas-paket/compose.yaml` auch die Ordner
 des NAS unter `nas`. DocuMan läuft im Container und sieht nur eingebundene Ordner, für andere Laufwerke
 ändern Sie `BACKUP_BROWSE_DIR` und erstellen das Projekt neu. Der Dokument- und der Eingangsordner sind
-als Ziel gesperrt. Eine Sicherung auf derselben Festplatte schützt nicht vor deren Ausfall.
+als Ziel gesperrt. Liegt der Sicherungsordner selbst auf dem NAS, taucht er unter `nas` ein zweites Mal
+auf, etwa als `nas/backup/DocuMan`. Wählen Sie ihn dort, lässt DocuMan das Feld leer und sichert direkt in den
+Sicherungsordner, statt in sich selbst oder in den leeren Ordner `nas`, den Docker darin anlegt.
+Eine Sicherung auf derselben Festplatte schützt nicht vor deren Ausfall.
 
 Das Archiv enthält nicht die `.env` und nicht den Eingangsordner. Es ist unverschlüsselt und enthält
 alle Dokumente im Klartext, behandeln Sie es also wie die Dokumente selbst. Sichern Sie die `.env`

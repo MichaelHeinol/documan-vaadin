@@ -193,7 +193,7 @@ public class BackupView extends Div {
         folder.setHelperText("Leer = direkt im Sicherungsordner. Fehlende Ordner werden angelegt.");
         Button choose = Ui.secondary("Ordner wählen", () -> new FolderDialog("Zielordner wählen", "Sicherungsordner",
                 folder.getValue(), value -> {
-                    String cleaned = BackupService.cleanFolder(value);
+                    String cleaned = backup.normalizeFolder(value);
                     return new FolderDialog.Listing(cleaned, backup.listFolders(cleaned));
                 }, backup::createFolder, folder::setValue).open());
         IntegerField keep = new IntegerField("Aufbewahren");
@@ -222,8 +222,9 @@ public class BackupView extends Div {
                     ? "Bitte eine Zahl zwischen 0 und " + MAX_KEEP + " angeben." : null);
             String target = "";
             try {
-                target = BackupService.cleanFolder(folder.getValue() == null ? "" : folder.getValue());
+                target = backup.normalizeFolder(folder.getValue() == null ? "" : folder.getValue());
                 backup.checkWritable(target);
+                folder.setValue(target);
                 Forms.show(folder, null);
             } catch (BackupException error) {
                 ok &= Forms.show(folder, error.getMessage());
