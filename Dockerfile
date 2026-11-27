@@ -1,4 +1,6 @@
 # Werkzeuge für OCR, PDF-Verarbeitung und Datenbanksicherung. Python ist nur für OCRmyPDF nötig.
+# Beim Bauen kommen die aktuellen Sicherheitsupdates von Debian dazu (apt-get upgrade). Mit
+# docker build --pull ist auch das Basis-Image frisch.
 FROM python:3.13-slim-trixie AS tools
 
 # Weitere OCR-Sprachen beim Bauen ergänzen, z. B. TESSERACT_LANGS="deu eng fra"
@@ -11,6 +13,7 @@ RUN python -c "import urllib.request; urllib.request.urlretrieve('https://www.po
  && echo "deb [signed-by=/usr/share/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" \
       > /etc/apt/sources.list.d/pgdg.list \
  && apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends \
       file \
       catdoc \
@@ -23,7 +26,10 @@ RUN python -c "import urllib.request; urllib.request.urlretrieve('https://www.po
       $(for lang in $TESSERACT_LANGS; do echo "tesseract-ocr-$lang"; done) \
  && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir ocrmypdf==16.13.0
+# pip wird danach nicht mehr gebraucht. Es bringt eigene, oft veraltete Bibliotheken mit (urllib3, msgpack,
+# setuptools), die Sicherheitsscanner melden, obwohl DocuMan sie nie aufruft.
+RUN pip install --no-cache-dir ocrmypdf==16.13.0 \
+ && pip uninstall -y pip
 
 # Liest den Text aus Formaten, die DocuMan unverändert ablegt. Dieselbe Datei nutzt die Django-Fassung.
 COPY src/main/python/textextract.py /usr/local/bin/documan-textextract

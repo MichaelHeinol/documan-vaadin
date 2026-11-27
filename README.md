@@ -84,7 +84,7 @@ und CPU-Zeit, gemessen wurden rund 2 Sekunden je Seite, auf schwachen Geräten k
 das geschieht nicht automatisch:
 
 ```bash
-docker build --platform linux/amd64 --provenance=false --sbom=false --target app -t mikeheinoldock/documan-vaadin:latest .
+docker build --pull --platform linux/amd64 --provenance=false --sbom=false --target app -t mikeheinoldock/documan-vaadin:latest .
 ```
 
 ```bash
@@ -576,10 +576,12 @@ Konto gibt.
 
 ## Betrieb
 
-Aktualisieren, nachdem neue Projektdateien kopiert wurden:
+Aktualisieren, nachdem neue Projektdateien kopiert wurden. `--pull` holt dabei auch ein neues Basis-Image mit den
+aktuellen Sicherheitsupdates:
 
 ```bash
-docker compose up -d --build
+docker compose build --pull
+docker compose up -d
 ```
 
 Protokolle ansehen:
